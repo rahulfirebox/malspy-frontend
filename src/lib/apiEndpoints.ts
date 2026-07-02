@@ -1,0 +1,63 @@
+export const API = {
+  auth: {
+    login: '/auth/login/',
+    logout: '/auth/logout/',
+    register: '/auth/register/',
+    me: '/auth/me/',
+    refresh: '/auth/refresh/',
+    forgotPassword: '/auth/forgot-password/',
+    resetPassword: '/auth/reset-password/',
+    verifyEmail: '/auth/verify-email/',
+  },
+  domains: {
+    list: '/domains/',
+    detail: (id: string) => `/domains/${id}/`,
+    verify: (id: string) => `/domains/${id}/verify/`,
+    scan: (id: string) => `/domains/${id}/scan/`,
+  },
+  scans: {
+    list: '/scan/',
+    detail: (id: string) => `/scan/${id}/`,
+    status: (id: string) => `/scan/${id}/status/`,
+    rescan: (id: string) => `/scan/${id}/rescan/`,
+    create: '/scan/',
+    publicScan: '/scan/public/',
+    publicDetail: (id: string) => `/scan/public/${id}/`,
+    delete: (id: string) => `/scan/${id}/`,
+    report: (id: string) => `/scan/${id}/report/pdf/`,
+  },
+  alerts: {
+    list: '/alerts/',
+    detail: (id: string) => `/alerts/${id}/`,
+    resolve: (id: string) => `/alerts/${id}/resolve/`,
+    bulkResolve: '/alerts/bulk-resolve/',
+  },
+  agents: {
+    list: '/agents/',
+    detail: (id: string) => `/agents/${id}/`,
+    scans: (id: string) => `/agents/${id}/scans/`,
+  },
+  apiKeys: {
+    list: '/api-keys/',
+    detail: (id: string) => `/api-keys/${id}/`,
+    revoke: (id: string) => `/api-keys/${id}/`,
+  },
+  billing: {
+    plans: '/billing/plans/',
+    currentPlan: '/billing/plan/',
+    upgrade: '/billing/upgrade/',
+    cancel: '/billing/cancel/',
+    invoices: '/billing/invoices/',
+    createOrder: '/billing/create-order/',
+    verifyPayment: '/billing/verify-payment/',
+  },
+  dashboard: {
+    analytics: '/scan/analytics/',
+  },
+  superadmin: {
+    signatures: '/superadmin/signatures/',
+    signatureDetail: (id: string) => `/superadmin/signatures/${id}/`,
+    refunds: '/superadmin/refunds/',
+    refundInitiate: '/superadmin/refunds/initiate/',
+  },
+} as const;

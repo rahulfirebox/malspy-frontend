@@ -1,0 +1,5 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Aethera">
+  <path d="M8 56 L32 8 L56 56" stroke="#0E0E14" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20 56 L32 28 L44 56" stroke="#4F46E5" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="32" cy="50" r="2.4" fill="#4F46E5"/>
+</svg>

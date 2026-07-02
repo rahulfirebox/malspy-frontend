@@ -1,0 +1,59 @@
+'use client';
+
+import React from 'react';
+import { Bell, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
+
+export function TopBar() {
+  const { user, org, logout } = useAuth();
+  const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      await authService.logout();
+    } catch {
+      
+    } finally {
+      logout();
+      router.push('/login');
+    }
+  }
+
+  return (
+    <header className="h-16 bg-white border-b border-border flex items-center justify-between px-6">
+      <div>
+        {org && <p className="text-sm font-semibold text-text-primary">{org.name}</p>}
+        {org && <p className="text-xs text-text-secondary capitalize">{org.plan ?? 'free'} plan</p>}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          className="relative p-2 rounded-md text-text-secondary hover:bg-bg-page focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          aria-label="View notifications"
+        >
+          <Bell className="h-5 w-5" aria-hidden="true" />
+        </button>
+
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold">
+            {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+          </div>
+          <div className="hidden sm:block">
+            <p className="text-sm font-medium text-text-primary">{user?.name}</p>
+            <p className="text-xs text-text-secondary">{user?.email}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="p-2 rounded-md text-text-secondary hover:bg-bg-page focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+    </header>
+  );
+}
