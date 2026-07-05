@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import { parsePaginatedResponse } from '@/lib/apiUtils';
+import { parsePaginatedResponse, unwrapApiData } from '@/lib/apiUtils';
 import { API } from '@/lib/apiEndpoints';
 import type { Domain, PaginatedResponse, ScanListItem } from '@/types';
 import type { AddDomainInput } from '@/lib/schemas/domain';
@@ -16,13 +16,13 @@ export const domainService = {
   },
 
   async addDomain(data: AddDomainInput): Promise<Domain> {
-    const res = await apiClient.post<Domain>(API.domains.list, data);
-    return res.data;
+    const res = await apiClient.post(API.domains.list, data);
+    return unwrapApiData<Domain>(res.data);
   },
 
   async updateDomain(id: string, data: Partial<AddDomainInput>): Promise<Domain> {
-    const res = await apiClient.patch<Domain>(API.domains.detail(id), data);
-    return res.data;
+    const res = await apiClient.patch(API.domains.detail(id), data);
+    return unwrapApiData<Domain>(res.data);
   },
 
   async deleteDomain(id: string): Promise<void> {
@@ -30,8 +30,8 @@ export const domainService = {
   },
 
   async getDomain(id: string): Promise<Domain> {
-    const res = await apiClient.get<Domain>(API.domains.detail(id));
-    return res.data;
+    const res = await apiClient.get(API.domains.detail(id));
+    return unwrapApiData<Domain>(res.data);
   },
 
   async listDomainScans(

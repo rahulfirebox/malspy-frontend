@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import apiClient from '@/services/apiClient';
+import { unwrapApiData } from '@/lib/apiUtils';
 import type { User } from '@/types';
 
 const PUBLIC_PATHS = [
@@ -32,9 +33,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (accessToken) {
       const controller = new AbortController();
       apiClient
-        .get<{ success: boolean; data: User }>('/auth/me/', { signal: controller.signal })
+        .get('/auth/me/', { signal: controller.signal })
         .then(res => {
-          setUser(res.data.data);
+          setUser(unwrapApiData<User>(res.data));
         })
         .catch((err: unknown) => {
           if (controller.signal.aborted) return;

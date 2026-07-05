@@ -1,5 +1,6 @@
 import apiClient from './apiClient';
 import { API } from '@/lib/apiEndpoints';
+import { unwrapApiData } from '@/lib/apiUtils';
 import { useAuthStore } from '@/stores/authStore';
 import type {
   LoginInput,
@@ -11,8 +12,8 @@ import type { LoginResponse, RegisterResponse, User } from '@/types';
 
 export const authService = {
   async login(data: LoginInput): Promise<LoginResponse> {
-    const res = await apiClient.post<LoginResponse>(API.auth.login, data);
-    return res.data;
+    const res = await apiClient.post(API.auth.login, data);
+    return unwrapApiData<LoginResponse>(res.data);
   },
 
   async register(data: RegisterInput): Promise<RegisterResponse> {
@@ -50,8 +51,8 @@ export const authService = {
   },
 
   async getMe(): Promise<User> {
-    const res = await apiClient.get<User>(API.auth.me);
-    return res.data;
+    const res = await apiClient.get(API.auth.me);
+    return unwrapApiData<User>(res.data);
   },
 
   async updateMe(data: { name: string; notify_email: boolean }): Promise<User> {

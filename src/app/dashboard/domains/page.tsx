@@ -216,7 +216,8 @@ export default function DomainsPage() {
             </TableBody>
           </Table>
           <div className="px-4 py-3 border-t border-[#e5e7eb] text-xs text-[#6b7280]">
-            {domainsQuery.data.count} domain{domainsQuery.data.count !== 1 ? 's' : ''} monitored
+            {domainsQuery.data?.count ?? domains.length} domain
+            {(domainsQuery.data?.count ?? domains.length) !== 1 ? 's' : ''} monitored
           </div>
         </div>
       )}

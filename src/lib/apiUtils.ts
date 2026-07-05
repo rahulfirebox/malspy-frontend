@@ -22,11 +22,60 @@ export function parseApiError(error: unknown): ParsedApiError {
   return { code: 'UNKNOWN_ERROR', message: 'An unexpected error occurred. Please try again.' };
 }
 
+type ApiEnvelope<T> = { success?: boolean; data?: T };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function unwrapApiData<T>(body: unknown): T {
+  if (isRecord(body) && 'data' in body && body.data !== undefined) {
+    return body.data as T;
+  }
+  return body as T;
+}
+
+function extractResultItems<T>(payload: Record<string, unknown>): T[] {
+  for (const key of ['results', 'items', 'domains'] as const) {
+    const value = payload[key];
+    if (Array.isArray(value)) return value as T[];
+  }
+  return [];
+}
+
 export function parsePaginatedResponse<T>(
-  response: AxiosResponse<PaginatedResponse<T>>
+  response: AxiosResponse<PaginatedResponse<T> | ApiEnvelope<PaginatedResponse<T> | T[]>>
 ): PaginatedResponse<T> {
-  const { results, count, next, previous, page_size } = response.data;
-  return { results, count, next, previous, page_size };
+  const unwrapped = unwrapApiData<PaginatedResponse<T> | T[] | Record<string, unknown>>(
+    response.data
+  );
+
+  if (Array.isArray(unwrapped)) {
+    return {
+      results: unwrapped,
+      count: unwrapped.length,
+      next: null,
+      previous: null,
+      page_size: unwrapped.length,
+    };
+  }
+
+  if (isRecord(unwrapped)) {
+    const results = extractResultItems<T>(unwrapped);
+    const count =
+      typeof unwrapped.count === 'number' ? unwrapped.count : results.length;
+
+    return {
+      results,
+      count,
+      next: typeof unwrapped.next === 'string' ? unwrapped.next : null,
+      previous: typeof unwrapped.previous === 'string' ? unwrapped.previous : null,
+      page_size:
+        typeof unwrapped.page_size === 'number' ? unwrapped.page_size : results.length,
+    };
+  }
+
+  return { results: [], count: 0, next: null, previous: null, page_size: 0 };
 }
 
 export function formatDate(iso: string): string {
