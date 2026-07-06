@@ -10,19 +10,21 @@ import { useAuthStore } from '@/stores/authStore';
 import { useApiHealth } from '@/hooks/useApiHealth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, isInitializing, logout } = useAuthStore();
   const router = useRouter();
   const { isHealthy } = useApiHealth();
 
   useEffect(() => {
+    if (isInitializing) return;
     if (!isAuthenticated) {
       router.push(`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isInitializing, router]);
 
   useEffect(() => {
     const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted && !useAuthStore.getState().accessToken) {
+      const { accessToken, isInitializing: bootstrapping } = useAuthStore.getState();
+      if (e.persisted && !bootstrapping && !accessToken) {
         window.location.replace('/login');
       }
     };
@@ -40,7 +42,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && !useAuthStore.getState().accessToken) {
+      const { accessToken, isInitializing: bootstrapping } = useAuthStore.getState();
+      if (
+        document.visibilityState === 'visible' &&
+        !bootstrapping &&
+        !accessToken
+      ) {
         router.push('/login');
       }
     };
@@ -48,10 +55,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [router]);
 
-  if (!isAuthenticated) return null;
+  if (isInitializing || !isAuthenticated) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f4f6f8]">
+    <div className="flex h-screen overflow-hidden bg-bg-page">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <TopBar />

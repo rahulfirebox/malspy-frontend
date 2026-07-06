@@ -89,7 +89,13 @@ export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
               <div className="flex flex-col items-center mb-6">
                 {rating && <RatingBadgeLarge rating={rating} />}
               </div>
-              <SecurityRatingCards ratings={scan.ratings} />
+              {scan.ratings ? (
+                <SecurityRatingCards ratings={scan.ratings} />
+              ) : (
+                <p className="text-sm text-text-secondary text-center py-4">
+                  Rating details are not available for this scan yet.
+                </p>
+              )}
             </Card>
 
             <WebsiteInfoCard
@@ -182,7 +188,7 @@ export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
               </p>
               <a
                 href="/register"
-                className="block w-full text-center py-2 bg-white border border-primary text-primary text-sm font-semibold rounded-md hover:bg-primary-light transition-colors"
+                className="block w-full text-center py-2 bg-bg-card border border-primary text-primary text-sm font-semibold rounded-md hover:bg-primary-light transition-colors"
               >
                 Start Monitoring
               </a>
@@ -195,7 +201,7 @@ export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
               </p>
               <a
                 href="/register"
-                className="block w-full text-center py-2 bg-white border border-border-dark text-text-secondary text-sm font-semibold rounded-md hover:bg-bg-page transition-colors"
+                className="block w-full text-center py-2 bg-bg-card border border-border-dark text-text-secondary text-sm font-semibold rounded-md hover:bg-bg-page transition-colors"
               >
                 Upgrade for PDF
               </a>

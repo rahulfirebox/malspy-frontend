@@ -84,7 +84,7 @@ export default function AlertsPage() {
               className={`px-4 py-1.5 text-sm font-medium transition-colors ${
                 filter === f
                   ? 'bg-[#2B7DBC] text-white'
-                  : 'bg-white text-[#6b7280] hover:bg-bg-page'
+                  : 'bg-bg-card text-[#6b7280] hover:bg-bg-page'
               }`}
             >
               {f === 'unresolved' ? 'Active' : 'All'}
@@ -114,7 +114,7 @@ export default function AlertsPage() {
           }
         />
       ) : (
-        <div className="bg-white border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
+        <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
           <Table>
             <TableHead>
               <tr>

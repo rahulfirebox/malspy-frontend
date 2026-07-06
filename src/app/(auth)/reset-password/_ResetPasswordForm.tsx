@@ -74,7 +74,7 @@ export default function ResetPasswordForm() {
   if (done) {
     return (
       <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center px-4">
-        <div className="bg-white border border-[#E0E0DA] rounded-xl shadow-lg p-8 w-full max-w-md text-center">
+        <div className="bg-bg-card border border-border rounded-xl shadow-lg p-8 w-full max-w-md text-center">
           <CheckCircle className="h-12 w-12 text-[#22c55e] mx-auto mb-4" aria-hidden="true" />
           <h2 className="text-xl font-bold text-[#0E0E14] mb-2">Password updated!</h2>
           <p className="text-sm text-[#5B5B6B] mb-6">
@@ -90,7 +90,7 @@ export default function ResetPasswordForm() {
 
   return (
     <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center px-4">
-      <div className="bg-white border border-[#E0E0DA] rounded-xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-bg-card border border-border rounded-xl shadow-lg p-8 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <Shield className="h-10 w-10 text-[#4F46E5] mb-3" aria-hidden="true" />
           <h1 className="text-xl font-bold text-[#0E0E14]">Set new password</h1>

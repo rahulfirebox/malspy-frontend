@@ -114,7 +114,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        <div className="bg-white border border-border rounded-lg shadow-md">
+        <div className="bg-bg-card border border-border rounded-lg shadow-md">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <h2 className="text-base font-semibold text-text-primary">Recent Scans</h2>
             <Link href="/dashboard/scans" className="text-xs text-primary hover:underline">
@@ -141,7 +141,7 @@ export default function DashboardPage() {
         </div>
 
         
-        <div className="bg-white border border-border rounded-lg shadow-md">
+        <div className="bg-bg-card border border-border rounded-lg shadow-md">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <h2 className="text-base font-semibold text-text-primary">Active Alerts</h2>
             <Link href="/dashboard/alerts" className="text-xs text-primary hover:underline">

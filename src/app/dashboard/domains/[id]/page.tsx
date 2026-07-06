@@ -106,7 +106,7 @@ export default function DomainDetailPage() {
       </div>
 
       
-      <div className="bg-white border border-[#E0E0DA] rounded-lg shadow-md p-5">
+      <div className="bg-bg-card border border-[#E0E0DA] rounded-lg shadow-md p-5">
         <div className="flex flex-wrap gap-6">
           <div>
             <p className="text-xs text-[#5B5B6B] mb-1">Status</p>
@@ -171,7 +171,7 @@ export default function DomainDetailPage() {
             description="Run a scan to start seeing results here."
           />
         ) : (
-          <div className="bg-white border border-[#E0E0DA] rounded-lg shadow-md overflow-hidden">
+          <div className="bg-bg-card border border-[#E0E0DA] rounded-lg shadow-md overflow-hidden">
             <Table>
               <TableHead>
                 <tr>
@@ -242,7 +242,7 @@ export default function DomainDetailPage() {
 
       
       {scansQuery.data?.results[0]?.status === 'completed' && (
-        <div className="bg-white border border-[#E0E0DA] rounded-lg shadow-md p-5">
+        <div className="bg-bg-card border border-[#E0E0DA] rounded-lg shadow-md p-5">
           <div className="flex items-center gap-2 mb-3">
             <ShieldCheck className="h-4 w-4 text-[#4F46E5]" aria-hidden="true" />
             <h2 className="text-sm font-semibold text-[#0E0E14]">TLS / SSL</h2>

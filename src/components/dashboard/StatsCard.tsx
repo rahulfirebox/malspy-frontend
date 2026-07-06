@@ -10,7 +10,7 @@ interface StatsCardProps {
 
 export function StatsCard({ label, value, icon, subtext, accent }: StatsCardProps) {
   return (
-    <div className="bg-white border border-border rounded-lg p-6 shadow-md flex items-start gap-4">
+    <div className="bg-bg-card border border-border rounded-lg p-6 shadow-md flex items-start gap-4">
       <div
         className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${!accent ? 'bg-primary-light' : ''}`}
         style={accent ? { backgroundColor: `color-mix(in srgb, ${accent} 10%, transparent)` } : undefined}

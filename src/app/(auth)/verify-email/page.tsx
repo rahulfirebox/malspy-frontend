@@ -46,7 +46,7 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f6f8] flex items-center justify-center px-4">
-      <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-bg-card border border-border rounded-xl shadow-lg p-8 w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
           <Shield className="h-10 w-10 text-[#2B7DBC] mb-3" aria-hidden="true" />
           <h1 className="text-xl font-bold text-[#1f2937]">Email Verification</h1>

@@ -93,7 +93,7 @@ export default function ApiKeysPage() {
             }
           />
         ) : (
-          <div className="bg-white border border-[#E0E0DA] rounded-lg shadow-md overflow-hidden">
+          <div className="bg-bg-card border border-[#E0E0DA] rounded-lg shadow-md overflow-hidden">
             <Table>
               <TableHead>
                 <tr>

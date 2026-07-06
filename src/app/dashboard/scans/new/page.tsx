@@ -100,7 +100,7 @@ export default function NewScanPage() {
     <div className="max-w-lg">
       <h1 className="text-xl font-bold text-text-primary mb-6">New Scan</h1>
       {quotaLimit !== -1 && (
-        <div className="mb-4 p-4 bg-white border border-border rounded-lg">
+        <div className="mb-4 p-4 bg-bg-card border border-border rounded-lg">
           <div className="flex justify-between text-sm mb-1">
             <span className="text-text-secondary">Scan quota</span>
             <span className="font-medium text-text-primary">{quotaUsed} / {quotaLimit}</span>

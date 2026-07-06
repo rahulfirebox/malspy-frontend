@@ -31,6 +31,20 @@ export default function ScansPage() {
   const pathname = usePathname();
   const [deleteTarget, setDeleteTarget] = useState<ScanListItem | null>(null);
   const [deleteError, setDeleteError] = useState('');
+  const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
+
+  async function handlePdfDownload(scan: ScanListItem) {
+    setDownloadingPdfId(scan.id);
+    try {
+      await scanService.downloadPdfReport(scan.id, scan.domain);
+      toast.success('PDF report downloaded');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to download PDF report.';
+      toast.error(message);
+    } finally {
+      setDownloadingPdfId(null);
+    }
+  }
 
   const search = searchParams.get('q') ?? '';
   const setSearch = (val: string) => {
@@ -113,7 +127,7 @@ export default function ScansPage() {
           }
         />
       ) : (
-        <div className="bg-white border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
+        <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
           <Table>
             <TableHead>
               <tr>
@@ -160,15 +174,15 @@ export default function ScansPage() {
                           <Shield className="h-4 w-4" aria-hidden="true" />
                         </button>
                       </Link>
-                      <a
-                        href={scanService.getPdfReportUrl(scan.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1.5 rounded hover:bg-bg-page text-[#6b7280] hover:text-primary focus:outline-none focus:ring-2 focus:ring-[#2B7DBC]"
+                      <button
+                        type="button"
+                        onClick={() => void handlePdfDownload(scan)}
+                        disabled={downloadingPdfId === scan.id}
+                        className="p-1.5 rounded hover:bg-bg-page text-[#6b7280] hover:text-primary focus:outline-none focus:ring-2 focus:ring-[#2B7DBC] disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label={`Download PDF for ${scan.domain}`}
                       >
                         <FileDown className="h-4 w-4" aria-hidden="true" />
-                      </a>
+                      </button>
                       <button
                         onClick={() => setDeleteTarget(scan)}
                         className="p-1.5 rounded hover:bg-danger-bg text-[#6b7280] hover:text-danger focus:outline-none focus:ring-2 focus:ring-[#ef4444]"

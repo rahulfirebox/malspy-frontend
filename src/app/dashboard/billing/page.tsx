@@ -214,7 +214,7 @@ export default function BillingPage() {
             {plans.map(plan => (
               <div
                 key={plan.slug}
-                className={`relative bg-white rounded-xl border-2 p-6 ${PLAN_COLORS[plan.slug as PlanSlug]}`}
+                className={`relative bg-bg-card rounded-xl border-2 p-6 ${PLAN_COLORS[plan.slug as PlanSlug]}`}
               >
                 {plan.slug === 'pro' && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2B7DBC] text-white text-xs font-semibold px-3 py-1 rounded-full">
@@ -287,11 +287,11 @@ export default function BillingPage() {
         ) : invoicesQuery.isError ? (
           <ErrorState message="Failed to load invoices." onRetry={() => invoicesQuery.refetch()} />
         ) : invoices.length === 0 ? (
-          <div className="text-sm text-[#6b7280] bg-white border border-[#e5e7eb] rounded-lg p-6 text-center">
+          <div className="text-sm text-[#6b7280] bg-bg-card border border-[#e5e7eb] rounded-lg p-6 text-center">
             No invoices yet.
           </div>
         ) : (
-          <div className="bg-white border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
+          <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
             <Table>
               <TableHead>
                 <tr>

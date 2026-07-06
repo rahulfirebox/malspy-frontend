@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
-import { parsePaginatedResponse } from '@/lib/apiUtils';
-import { env } from '@/lib/env';
+import axios from 'axios';
+import { parsePaginatedResponse, unwrapApiData, parseApiError } from '@/lib/apiUtils';
 import { API } from '@/lib/apiEndpoints';
 import type {} from '@/lib/schemas/responses';
 import type {
@@ -20,6 +20,36 @@ interface ListScansParams {
   ordering?: string;
 }
 
+function filenameFromDisposition(disposition: string | undefined, fallback: string): string {
+  if (!disposition) return fallback;
+  const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1]);
+  const match = disposition.match(/filename="?([^";\n]+)"?/i);
+  return match?.[1]?.trim() ?? fallback;
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function parseBlobError(blob: Blob): Promise<string> {
+  try {
+    const text = await blob.text();
+    const body = JSON.parse(text) as { error?: { message?: string } };
+    return body?.error?.message ?? 'Failed to download PDF report.';
+  } catch {
+    return 'Failed to download PDF report.';
+  }
+}
+
 export const scanService = {
   async publicScan(url: string): Promise<PublicScanCreated> {
     const res = await apiClient.post<PublicScanCreated>(API.scans.publicScan, { url });
@@ -32,10 +62,10 @@ export const scanService = {
     schedule: string | null;
   }): Promise<ScanDetail> {
     const idempotencyKey = crypto.randomUUID();
-    const res = await apiClient.post<ScanDetail>(API.scans.create, data, {
+    const res = await apiClient.post(API.scans.create, data, {
       headers: { 'Idempotency-Key': idempotencyKey },
     });
-    return res.data;
+    return unwrapApiData<ScanDetail>(res.data);
   },
 
   async listScans(params?: ListScansParams): Promise<PaginatedResponse<ScanListItem>> {
@@ -49,13 +79,13 @@ export const scanService = {
   },
 
   async getScan(id: string): Promise<ScanDetail> {
-    const res = await apiClient.get<ScanDetail>(API.scans.detail(id));
-    return res.data;
+    const res = await apiClient.get(API.scans.detail(id));
+    return unwrapApiData<ScanDetail>(res.data);
   },
 
   async getScanStatus(id: string): Promise<ScanStatusPoll> {
-    const res = await apiClient.get<ScanStatusPoll>(API.scans.status(id));
-    return res.data;
+    const res = await apiClient.get(API.scans.status(id));
+    return unwrapApiData<ScanStatusPoll>(res.data);
   },
 
   async deleteScan(id: string): Promise<void> {
@@ -75,17 +105,39 @@ export const scanService = {
     return res.data;
   },
 
-  getPdfReportUrl(id: string): string {
-    return `${env.NEXT_PUBLIC_API_URL}/api/v1${API.scans.report(id)}`;
+  async downloadPdfReport(id: string, domain?: string): Promise<void> {
+    const fallback = domain
+      ? `${domain.replace(/[^\w.-]+/g, '-')}-report.pdf`
+      : `scan-${id}.pdf`;
+
+    try {
+      const res = await apiClient.get(API.scans.report(id), { responseType: 'blob' });
+      const contentType = String(res.headers['content-type'] ?? '');
+
+      if (contentType.includes('application/json')) {
+        throw new Error(await parseBlobError(res.data as Blob));
+      }
+
+      const filename = filenameFromDisposition(
+        res.headers['content-disposition'] as string | undefined,
+        fallback
+      );
+      triggerBlobDownload(res.data as Blob, filename);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data instanceof Blob) {
+        throw new Error(await parseBlobError(err.response.data));
+      }
+      throw new Error(parseApiError(err).message);
+    }
   },
 
   async getPublicScanById(id: string): Promise<ScanDetail> {
-    const res = await apiClient.get<ScanDetail>(API.scans.publicDetail(id));
-    return res.data;
+    const res = await apiClient.get(API.scans.publicDetail(id));
+    return unwrapApiData<ScanDetail>(res.data);
   },
 
   async pollPublicScan(scanId: string): Promise<ScanStatusPoll> {
-    const res = await apiClient.get<ScanStatusPoll>(API.scans.status(scanId));
-    return res.data;
+    const res = await apiClient.get(API.scans.status(scanId));
+    return unwrapApiData<ScanStatusPoll>(res.data);
   },
 };

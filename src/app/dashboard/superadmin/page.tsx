@@ -140,7 +140,7 @@ export default function SuperAdminPage() {
         <select
           value={layerFilter}
           onChange={e => setLayerFilter(e.target.value)}
-          className="border border-[#E0E0DA] rounded-lg px-3 py-2 text-sm text-[#0E0E14] bg-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+          className="border border-[#E0E0DA] rounded-lg px-3 py-2 text-sm text-[#0E0E14] bg-bg-card focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
           aria-label="Filter by layer"
         >
           <option value="all">All Layers</option>
@@ -151,7 +151,7 @@ export default function SuperAdminPage() {
         <select
           value={severityFilter}
           onChange={e => setSeverityFilter(e.target.value)}
-          className="border border-[#E0E0DA] rounded-lg px-3 py-2 text-sm text-[#0E0E14] bg-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+          className="border border-[#E0E0DA] rounded-lg px-3 py-2 text-sm text-[#0E0E14] bg-bg-card focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
           aria-label="Filter by severity"
         >
           <option value="all">All Severities</option>
@@ -180,7 +180,7 @@ export default function SuperAdminPage() {
           }
         />
       ) : (
-        <div className="bg-white border border-[#E0E0DA] rounded-lg shadow-md overflow-hidden">
+        <div className="bg-bg-card border border-[#E0E0DA] rounded-lg shadow-md overflow-hidden">
           <Table>
             <TableHead>
               <tr>

@@ -22,7 +22,7 @@ export function TopBar() {
   }
 
   return (
-    <header className="h-16 bg-white border-b border-border flex items-center justify-between px-6">
+    <header className="h-16 bg-bg-card border-b border-border flex items-center justify-between px-6">
       <div>
         {org && <p className="text-sm font-semibold text-text-primary">{org.name}</p>}
         {org && <p className="text-xs text-text-secondary capitalize">{org.plan ?? 'free'} plan</p>}

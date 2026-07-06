@@ -4,6 +4,7 @@ import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { tokenRefreshMutex } from '@/lib/tokenRefreshMutex';
 import { env } from '@/lib/env';
+import { getApiBaseUrl } from '@/lib/apiBase';
 
 function getCsrfToken(): string {
   const name = 'csrftoken';

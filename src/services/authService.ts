@@ -33,11 +33,9 @@ export const authService = {
     await apiClient.post(API.auth.verifyEmail, { token });
   },
 
-  async refresh(refreshToken: string): Promise<{ access: string }> {
-    const res = await apiClient.post<{ access: string }>(API.auth.refresh, {
-      refresh: refreshToken,
-    });
-    return res.data;
+  async refresh(refreshToken: string): Promise<{ access: string; refresh?: string }> {
+    const res = await apiClient.post(API.auth.refresh, { refresh: refreshToken });
+    return unwrapApiData<{ access: string; refresh?: string }>(res.data);
   },
 
   async logout(): Promise<void> {

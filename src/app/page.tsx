@@ -1,169 +1,246 @@
 import React from 'react';
 import Link from 'next/link';
-import { Shield, Bug, Lock, Globe, CheckCircle, RefreshCw } from 'lucide-react';
+import Image from 'next/image';
+import {
+  Shield,
+  Bug,
+  Lock,
+  Globe,
+  CheckCircle,
+  RefreshCw,
+  ArrowRight,
+  Zap,
+  Clock,
+  Users,
+} from 'lucide-react';
 import { ScanInput } from '@/components/scan/ScanInput';
 import { formatCurrency } from '@/lib/apiUtils';
 
+const navLinks = [
+  { href: '#features', label: 'Features' },
+  { href: '#how-it-works', label: 'How It Works' },
+  { href: '#pricing', label: 'Pricing' },
+];
+
+const features = [
+  {
+    icon: Bug,
+    title: 'Malware Detection',
+    desc: 'Scan for JavaScript injections, hidden iframes, phishing code, and more.',
+    color: 'text-accent-green',
+    bg: 'bg-accent-green/10 glow-green',
+  },
+  {
+    icon: Globe,
+    title: 'Blacklist Status',
+    desc: 'Check 7 major security databases including Google, McAfee, and Norton.',
+    color: 'text-accent-amber',
+    bg: 'bg-accent-amber/10 glow-amber',
+  },
+  {
+    icon: Lock,
+    title: 'SSL/TLS Analysis',
+    desc: 'Verify certificate validity, expiry, HSTS, and cipher configuration.',
+    color: 'text-accent-purple',
+    bg: 'bg-accent-purple/10 glow-purple',
+  },
+];
+
+const stats = [
+  { icon: Globe, label: '10M+ Websites Scanned', color: 'text-primary' },
+  { icon: Clock, label: 'Instant Scan Results', color: 'text-accent-green' },
+  { icon: Users, label: 'Trusted by Web Developers', color: 'text-accent-purple' },
+];
+
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#f4f6f8]">
-      
-      <header className="bg-white border-b border-[#e5e7eb]">
+    <div className="min-h-screen bg-bg-page text-text-primary">
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-border/50 bg-bg-page/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Shield className="h-7 w-7 text-[#2B7DBC]" aria-hidden="true" />
-            <span className="font-bold text-lg text-[#1f2937]">SecureScan</span>
+            <Shield className="h-7 w-7 text-primary" aria-hidden="true" />
+            <span className="font-bold text-lg text-text-primary">SecureScan</span>
           </Link>
-          <nav className="flex items-center gap-4" aria-label="Main navigation">
+
+          <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
+            {navLinks.map(link => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-medium text-[#6b7280] hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-[#2B7DBC] rounded"
+              className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
             >
               Sign In
             </Link>
             <Link
               href="/register"
-              className="text-sm font-semibold bg-[#2B7DBC] hover:bg-primary-dark text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-[#2B7DBC] focus:ring-offset-2"
+              className="text-sm font-semibold bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition-colors glow-blue"
             >
               Sign Up Free
             </Link>
-          </nav>
+          </div>
         </div>
       </header>
 
-      
-      <section
-        className="py-20 px-4 text-center"
-        style={{
-          background: 'linear-gradient(135deg, #2B7DBC 0%, #1A5E8F 100%)',
-        }}
-      >
-        <h1 className="text-4xl font-bold text-white mb-3">Free Website Security Scanner</h1>
-        <p className="text-lg text-white/80 mb-10 max-w-xl mx-auto">
-          Check for malware, blacklist status, and security vulnerabilities — instantly, for free.
-        </p>
-        <ScanInput />
-      </section>
+      <section id="hero" className="relative min-h-screen flex flex-col justify-center pt-16 overflow-hidden">
+        <Image
+          src="/image/heroBackgroundImage.png"
+          alt=""
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-bg-page/50" aria-hidden="true" />
+        <div
+          className="absolute inset-0 bg-grid-pattern bg-grid opacity-30"
+          aria-hidden="true"
+        />
 
-      
-      <section className="py-16 px-4">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-[#1f2937] mb-10">What We Check</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              {
-                icon: <Bug className="h-6 w-6" />,
-                title: 'Malware Detection',
-                desc: 'Scan for JavaScript injections, hidden iframes, phishing code, and more.',
-              },
-              {
-                icon: <Globe className="h-6 w-6" />,
-                title: 'Blacklist Status',
-                desc: 'Check 7 major security databases including Google, McAfee, and Norton.',
-              },
-              {
-                icon: <Lock className="h-6 w-6" />,
-                title: 'SSL/TLS Analysis',
-                desc: 'Verify certificate validity, expiry, HSTS, and cipher configuration.',
-              },
-            ].map(f => (
-              <div
-                key={f.title}
-                className="bg-white border border-[#e5e7eb] rounded-lg p-6 shadow-md text-center"
-              >
-                <div className="flex justify-center mb-3 text-[#2B7DBC]">{f.icon}</div>
-                <h3 className="font-semibold text-[#1f2937] mb-2">{f.title}</h3>
-                <p className="text-sm text-[#6b7280]">{f.desc}</p>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 py-20 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent-green/40 bg-accent-green/10 text-accent-green text-sm font-medium mb-8">
+            <CheckCircle className="h-4 w-4" aria-hidden="true" />
+            100% Free · No Credit Card Required
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-5 tracking-tight leading-tight">
+            Free Website
+            <br />
+            <span className="text-primary">Security Scanner</span>
+          </h1>
+
+          <p className="text-lg text-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
+            Check for malware, blacklist status, and security vulnerabilities — instantly, for free.
+          </p>
+
+          <ScanInput variant="hero" />
+        </div>
+
+        <div className="relative z-10 border-t border-border/50 bg-bg-page/60 backdrop-blur-sm">
+          <div className="max-w-4xl mx-auto px-4 py-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {stats.map(({ icon: Icon, label, color }) => (
+              <div key={label} className="flex items-center justify-center gap-3">
+                <Icon className={`h-5 w-5 ${color}`} aria-hidden="true" />
+                <span className="text-sm font-medium text-text-secondary">{label}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      
-      <section className="py-16 px-4 bg-white border-t border-b border-[#e5e7eb]">
+      <section id="features" className="py-20 px-4 bg-bg-page">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-text-primary mb-3">What We Check</h2>
+          <p className="text-center text-text-secondary mb-12 max-w-xl mx-auto">
+            Comprehensive security analysis powered by multi-layer scanning technology.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {features.map(({ icon: Icon, title, desc, color, bg }) => (
+              <div
+                key={title}
+                className="bg-bg-card border border-border rounded-xl p-6 text-center hover:border-primary/30 transition-colors group"
+              >
+                <div
+                  className={`inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4 ${bg}`}
+                >
+                  <Icon className={`h-7 w-7 ${color}`} aria-hidden="true" />
+                </div>
+                <h3 className="font-semibold text-text-primary mb-2">{title}</h3>
+                <p className="text-sm text-text-secondary mb-4">{desc}</p>
+                <span className="inline-flex items-center gap-1 text-sm text-primary group-hover:gap-2 transition-all">
+                  Learn more <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works" className="py-20 px-4 bg-bg-elevated/30 border-y border-border">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-[#1f2937] mb-10">How It Works</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+          <h2 className="text-3xl font-bold text-center text-text-primary mb-12">How It Works</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 text-center">
             {[
               {
                 step: '1',
-                icon: <Globe className="h-8 w-8 mx-auto text-[#2B7DBC]" />,
+                icon: Globe,
                 title: 'Enter Your URL',
                 desc: 'Type your website address in the scanner above.',
               },
               {
                 step: '2',
-                icon: <RefreshCw className="h-8 w-8 mx-auto text-[#2B7DBC]" />,
+                icon: RefreshCw,
                 title: 'We Scan It',
                 desc: 'Our engine checks for malware, blacklists, SSL, and security headers.',
               },
               {
                 step: '3',
-                icon: <CheckCircle className="h-8 w-8 mx-auto text-[#2B7DBC]" />,
+                icon: CheckCircle,
                 title: 'Get Your Report',
                 desc: 'View a detailed security report with actionable recommendations.',
               },
             ].map(item => (
               <div key={item.step}>
-                <div className="w-10 h-10 rounded-full bg-[#EBF4FD] text-[#2B7DBC] font-bold text-lg flex items-center justify-center mx-auto mb-4">
+                <div className="w-10 h-10 rounded-full bg-primary/20 text-primary font-bold text-lg flex items-center justify-center mx-auto mb-4 border border-primary/30">
                   {item.step}
                 </div>
-                {item.icon}
-                <h3 className="font-semibold text-[#1f2937] mt-3 mb-1">{item.title}</h3>
-                <p className="text-sm text-[#6b7280]">{item.desc}</p>
+                <item.icon className="h-8 w-8 mx-auto text-primary mb-3" aria-hidden="true" />
+                <h3 className="font-semibold text-text-primary mb-2">{item.title}</h3>
+                <p className="text-sm text-text-secondary">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      
-      <section className="py-16 px-4">
+      <section id="pricing" className="py-20 px-4 bg-bg-page">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-[#1f2937] mb-10">Simple Pricing</h2>
+          <h2 className="text-3xl font-bold text-center text-text-primary mb-3">Simple Pricing</h2>
+          <p className="text-center text-text-secondary mb-12">Start free, upgrade when you need more.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            
-            <div className="bg-white border border-[#e5e7eb] rounded-lg p-6 shadow-md">
-              <h3 className="text-xl font-bold text-[#1f2937]">Free</h3>
-              <p className="text-3xl font-bold text-[#1f2937] mt-2">
-                {formatCurrency(0)}<span className="text-base font-normal text-[#6b7280]">/mo</span>
+            <div className="bg-bg-card border border-border rounded-xl p-6">
+              <h3 className="text-xl font-bold text-text-primary">Free</h3>
+              <p className="text-3xl font-bold text-text-primary mt-2">
+                {formatCurrency(0)}
+                <span className="text-base font-normal text-text-secondary">/mo</span>
               </p>
-              <ul className="mt-5 space-y-2 text-sm text-[#6b7280]">
-                {[
-                  '5 scans/month',
-                  '1 domain',
-                  'Basic security report',
-                  'Blacklist check',
-                  'SSL analysis',
-                ].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <CheckCircle
-                      className="h-4 w-4 text-[#22c55e] flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                    {f}
-                  </li>
-                ))}
+              <ul className="mt-5 space-y-2 text-sm text-text-secondary">
+                {['5 scans/month', '1 domain', 'Basic security report', 'Blacklist check', 'SSL analysis'].map(
+                  f => (
+                    <li key={f} className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-accent-green flex-shrink-0" aria-hidden="true" />
+                      {f}
+                    </li>
+                  )
+                )}
               </ul>
               <Link
                 href="/register"
-                className="mt-6 block w-full text-center py-2.5 border border-[#2B7DBC] text-[#2B7DBC] font-semibold rounded-md hover:bg-primary-light transition-colors text-sm"
+                className="mt-6 block w-full text-center py-2.5 border border-primary text-primary font-semibold rounded-lg hover:bg-primary-light transition-colors text-sm"
               >
                 Get Started Free
               </Link>
             </div>
 
-            
-            <div className="bg-white border-2 border-[#2B7DBC] rounded-lg p-6 shadow-md relative">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2B7DBC] text-white text-xs font-bold px-3 py-1 rounded-full">
+            <div className="bg-bg-card border-2 border-primary rounded-xl p-6 relative glow-blue">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
                 Most Popular
               </span>
-              <h3 className="text-xl font-bold text-[#1f2937]">Pro</h3>
-              <p className="text-3xl font-bold text-[#1f2937] mt-2">
-                {formatCurrency(19.99)}<span className="text-base font-normal text-[#6b7280]">/mo</span>
+              <h3 className="text-xl font-bold text-text-primary">Pro</h3>
+              <p className="text-3xl font-bold text-text-primary mt-2">
+                {formatCurrency(19.99)}
+                <span className="text-base font-normal text-text-secondary">/mo</span>
               </p>
-              <ul className="mt-5 space-y-2 text-sm text-[#6b7280]">
+              <ul className="mt-5 space-y-2 text-sm text-text-secondary">
                 {[
                   '100 scans/month',
                   '10 domains',
@@ -174,29 +251,26 @@ export default function LandingPage() {
                   'Scheduled scans',
                 ].map(f => (
                   <li key={f} className="flex items-center gap-2">
-                    <CheckCircle
-                      className="h-4 w-4 text-[#22c55e] flex-shrink-0"
-                      aria-hidden="true"
-                    />
+                    <CheckCircle className="h-4 w-4 text-accent-green flex-shrink-0" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
               </ul>
               <Link
                 href="/register"
-                className="mt-6 block w-full text-center py-2.5 bg-[#2B7DBC] hover:bg-primary-dark text-white font-semibold rounded-md transition-colors text-sm"
+                className="mt-6 block w-full text-center py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors text-sm"
               >
                 Start Pro Trial
               </Link>
             </div>
 
-            
-            <div className="bg-white border border-[#e5e7eb] rounded-lg p-6 shadow-md">
-              <h3 className="text-xl font-bold text-[#1f2937]">Enterprise</h3>
-              <p className="text-3xl font-bold text-[#1f2937] mt-2">
-                {formatCurrency(99)}<span className="text-base font-normal text-[#6b7280]">/mo</span>
+            <div className="bg-bg-card border border-border rounded-xl p-6">
+              <h3 className="text-xl font-bold text-text-primary">Enterprise</h3>
+              <p className="text-3xl font-bold text-text-primary mt-2">
+                {formatCurrency(99)}
+                <span className="text-base font-normal text-text-secondary">/mo</span>
               </p>
-              <ul className="mt-5 space-y-2 text-sm text-[#6b7280]">
+              <ul className="mt-5 space-y-2 text-sm text-text-secondary">
                 {[
                   'Unlimited scans',
                   'Unlimited domains',
@@ -207,17 +281,14 @@ export default function LandingPage() {
                   'Custom integrations',
                 ].map(f => (
                   <li key={f} className="flex items-center gap-2">
-                    <CheckCircle
-                      className="h-4 w-4 text-[#22c55e] flex-shrink-0"
-                      aria-hidden="true"
-                    />
+                    <CheckCircle className="h-4 w-4 text-accent-green flex-shrink-0" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
               </ul>
               <a
                 href="mailto:sales@securescan.io"
-                className="mt-6 block w-full text-center py-2.5 border border-[#e5e7eb] text-[#6b7280] font-semibold rounded-md hover:bg-bg-page transition-colors text-sm"
+                className="mt-6 block w-full text-center py-2.5 border border-border-dark text-text-secondary font-semibold rounded-lg hover:bg-bg-elevated transition-colors text-sm"
               >
                 Contact Sales
               </a>
@@ -226,25 +297,38 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
-      <footer className="bg-white border-t border-[#e5e7eb] py-8 px-4">
+      <section className="py-16 px-4 bg-gradient-to-r from-primary/10 via-bg-elevated to-accent-purple/10 border-t border-border">
+        <div className="max-w-3xl mx-auto text-center">
+          <Zap className="h-10 w-10 text-primary mx-auto mb-4" aria-hidden="true" />
+          <h2 className="text-2xl font-bold text-text-primary mb-3">Ready to secure your website?</h2>
+          <p className="text-text-secondary mb-6">Run your first free scan in under 60 seconds.</p>
+          <a
+            href="#hero"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-3 rounded-lg transition-colors glow-blue"
+          >
+            Scan Now <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </a>
+        </div>
+      </section>
+
+      <footer className="border-t border-border py-8 px-4 bg-bg-page">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-[#2B7DBC]" aria-hidden="true" />
-            <span className="text-sm font-semibold text-[#1f2937]">SecureScan</span>
+            <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
+            <span className="text-sm font-semibold text-text-primary">SecureScan</span>
           </div>
           <nav className="flex gap-6" aria-label="Footer navigation">
             {['Privacy Policy', 'Terms of Service', 'Contact'].map(link => (
               <a
                 key={link}
                 href="#"
-                className="text-xs text-[#6b7280] hover:text-text-primary transition-colors"
+                className="text-xs text-text-secondary hover:text-text-primary transition-colors"
               >
                 {link}
               </a>
             ))}
           </nav>
-          <p className="text-xs text-[#6b7280]">
+          <p className="text-xs text-text-secondary">
             © {new Date().getFullYear()} SecureScan. All rights reserved.
           </p>
         </div>

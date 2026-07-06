@@ -162,7 +162,7 @@ export default function DomainsPage() {
           }
         />
       ) : (
-        <div className="bg-white border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
+        <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
           <Table>
             <TableHead>
               <tr>

@@ -26,6 +26,7 @@ export default function ScanDetailPage() {
   const pollCountRef = useRef(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const scanQuery = useQuery({
     queryKey: ['scan', id],
@@ -35,6 +36,21 @@ export default function ScanDetailPage() {
   });
 
   const scan = scanQuery.data;
+
+  async function handlePdfDownload() {
+    setPdfLoading(true);
+    setActionError('');
+    try {
+      await scanService.downloadPdfReport(id, scan?.domain);
+      toast.success('PDF report downloaded');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to download PDF report.';
+      setActionError(message);
+      toast.error(message);
+    } finally {
+      setPdfLoading(false);
+    }
+  }
 
   
   useEffect(() => {
@@ -119,7 +135,7 @@ export default function ScanDetailPage() {
 
   if (isProcessing) {
     return (
-      <div className="bg-white border border-[#e5e7eb] rounded-lg shadow-md">
+      <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md">
         <ScanProgress domain={scan.domain} />
       </div>
     );
@@ -137,16 +153,16 @@ export default function ScanDetailPage() {
         <RefreshCw className="h-4 w-4" aria-hidden="true" />
         Rescan
       </Button>
-      <a
-        href={scanService.getPdfReportUrl(id)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 h-8 px-3 text-sm font-semibold border border-[#e5e7eb] rounded-md text-[#6b7280] hover:bg-bg-page transition-colors"
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => void handlePdfDownload()}
+        loading={pdfLoading}
         aria-label="Download PDF report"
       >
         <FileDown className="h-4 w-4" aria-hidden="true" />
         PDF
-      </a>
+      </Button>
       <Button
         variant="danger"
         size="sm"

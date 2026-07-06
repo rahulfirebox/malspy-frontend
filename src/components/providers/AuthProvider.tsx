@@ -3,9 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
-import apiClient from '@/services/apiClient';
-import { unwrapApiData } from '@/lib/apiUtils';
-import type { User } from '@/types';
+import { authService } from '@/services/authService';
 
 const PUBLIC_PATHS = [
   '/',
@@ -13,46 +11,66 @@ const PUBLIC_PATHS = [
   '/register',
   '/forgot-password',
   '/reset-password',
+  '/verify-email',
   '/results',
 ];
 
+async function bootstrapSession(): Promise<void> {
+  const { accessToken, refreshToken, setAccessToken, setUser, clearAuth, setInitialized } =
+    useAuthStore.getState();
+
+  if (!accessToken && !refreshToken) {
+    setInitialized();
+    return;
+  }
+
+  try {
+    let token = accessToken;
+    if (!token && refreshToken) {
+      const refreshed = await authService.refresh(refreshToken);
+      token = refreshed.access;
+      setAccessToken(token);
+    }
+
+    const user = await authService.getMe();
+    setUser(user);
+  } catch {
+    clearAuth();
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, accessToken, setUser } = useAuthStore();
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+  const isInitializing = useAuthStore(s => s.isInitializing);
   const router = useRouter();
   const pathname = usePathname();
-  const didMount = useRef(false);
+  const bootstrapStarted = useRef(false);
 
-  
-  
-  
-  
   useEffect(() => {
-    if (didMount.current) return;
-    didMount.current = true;
+    if (bootstrapStarted.current) return;
 
-    if (accessToken) {
-      const controller = new AbortController();
-      apiClient
-        .get('/auth/me/', { signal: controller.signal })
-        .then(res => {
-          setUser(unwrapApiData<User>(res.data));
-        })
-        .catch((err: unknown) => {
-          if (controller.signal.aborted) return;
-          useAuthStore.getState().clearAuth();
-        });
-      return () => controller.abort();
-    } else {
-      useAuthStore.getState().setInitialized();
+    const runBootstrap = () => {
+      if (bootstrapStarted.current) return;
+      bootstrapStarted.current = true;
+      void bootstrapSession();
+    };
+
+    if (useAuthStore.persist.hasHydrated()) {
+      runBootstrap();
+      return;
     }
-  }, []); 
+
+    return useAuthStore.persist.onFinishHydration(runBootstrap);
+  }, []);
 
   useEffect(() => {
+    if (isInitializing) return;
+
     const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith('/results'));
     if (!isAuthenticated && !isPublic && pathname.startsWith('/dashboard')) {
       router.push(`/login?returnUrl=${encodeURIComponent(pathname)}`);
     }
-  }, [isAuthenticated, pathname, router]);
+  }, [isAuthenticated, isInitializing, pathname, router]);
 
   return <>{children}</>;
 }

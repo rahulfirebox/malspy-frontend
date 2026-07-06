@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
   if (done) {
     return (
       <div className="min-h-screen bg-[#f4f6f8] flex items-center justify-center px-4">
-        <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-lg p-8 w-full max-w-md text-center">
+        <div className="bg-bg-card border border-border rounded-xl shadow-lg p-8 w-full max-w-md text-center">
           <CheckCircle className="h-12 w-12 text-[#22c55e] mx-auto mb-4" aria-hidden="true" />
           <h2 className="text-xl font-bold text-[#1f2937] mb-2">Password updated!</h2>
           <p className="text-sm text-[#6b7280] mb-6">
@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f6f8] flex items-center justify-center px-4">
-      <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-bg-card border border-border rounded-xl shadow-lg p-8 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <Shield className="h-10 w-10 text-[#2B7DBC] mb-3" aria-hidden="true" />
           <h1 className="text-xl font-bold text-[#1f2937]">Set new password</h1>

@@ -48,7 +48,7 @@ export function Sidebar() {
                   className={`flex items-center gap-3 h-11 px-3 rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 ${
                     isActive
                       ? 'bg-primary text-white border-l-4 border-l-white pl-2'
-                      : 'text-text-sidebar hover:bg-white/[0.08]'
+                      : 'text-text-sidebar hover:bg-bg-card/[0.08]'
                   }`}
                   aria-current={isActive ? 'page' : undefined}
                 >
