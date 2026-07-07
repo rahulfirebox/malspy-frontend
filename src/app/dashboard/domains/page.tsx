@@ -20,12 +20,18 @@ import { formatDateShort, parseApiError } from '@/lib/apiUtils';
 import { ERROR_CODES } from '@/lib/constants/errorCodes';
 import toast from 'react-hot-toast';
 import type { Domain } from '@/types';
+import { AddDomainSchema } from '@/lib/schemas/domain';
+import {
+  DOMAIN_FREQUENCY_OPTIONS,
+  getFrequencyLabel,
+  type DomainFrequencyKey,
+} from '@/lib/constants/domainFrequency';
 
 const STATUS_COLORS: Record<string, string> = {
   clean: 'bg-[#f0fdf4] text-[#166534] border-[#bbf7d0]',
   infected: 'bg-[#fef2f2] text-[#7f1d1d] border-[#fecaca]',
   blacklisted: 'bg-[#fef2f2] text-[#7f1d1d] border-[#fecaca]',
-  unknown: 'bg-[#f4f6f8] text-[#6b7280] border-[#e5e7eb]',
+  unknown: 'bg-bg-elevated text-text-secondary border-border',
 };
 
 export default function DomainsPage() {
@@ -37,7 +43,14 @@ export default function DomainsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Domain | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [newDomain, setNewDomain] = useState('');
+  const [frequency, setFrequency] = useState<DomainFrequencyKey>('daily');
   const [addError, setAddError] = useState<string | null>(null);
+
+  function resetAddForm() {
+    setNewDomain('');
+    setFrequency('daily');
+    setAddError(null);
+  }
 
   const search = searchParams.get('q') ?? '';
   const setSearch = (val: string) => {
@@ -59,10 +72,10 @@ export default function DomainsPage() {
   });
 
   const addMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (data: { domain: string; frequency: DomainFrequencyKey }) =>
       domainService.addDomain({
-        domain: newDomain,
-        frequency: 'weekly',
+        domain: data.domain,
+        frequency: data.frequency,
         notify_email: true,
         slack_webhook_url: null,
       }),
@@ -70,8 +83,7 @@ export default function DomainsPage() {
     onSuccess: () => {
       toast.success('Domain added to monitoring');
       setAddOpen(false);
-      setNewDomain('');
-      setAddError(null);
+      resetAddForm();
       void qc.invalidateQueries({ queryKey: ['domains', userId] });
     },
     onError: (err: unknown) => {
@@ -85,6 +97,21 @@ export default function DomainsPage() {
       }
     },
   });
+
+  function handleAddDomain() {
+    setAddError(null);
+    const parsed = AddDomainSchema.safeParse({
+      domain: newDomain.trim(),
+      frequency,
+      notify_email: true,
+      slack_webhook_url: null,
+    });
+    if (!parsed.success) {
+      setAddError(parsed.error.errors[0]?.message ?? 'Invalid domain');
+      return;
+    }
+    addMutation.mutate(parsed.data);
+  }
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => domainService.deleteDomain(id),
@@ -117,7 +144,7 @@ export default function DomainsPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1f2937]">Monitored Domains</h1>
+        <h1 className="text-xl font-bold text-text-primary">Monitored Domains</h1>
         <Button size="md" onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
           Add Domain
@@ -136,7 +163,7 @@ export default function DomainsPage() {
 
       {domainsQuery.isFetching && !domainsQuery.isLoading && (
         <div className="flex justify-end">
-          <span className="text-xs text-[#6b7280]">Refreshing…</span>
+          <span className="text-xs text-text-secondary">Refreshing…</span>
         </div>
       )}
 
@@ -162,7 +189,7 @@ export default function DomainsPage() {
           }
         />
       ) : (
-        <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
+        <div className="bg-bg-card border border-border rounded-lg shadow-md overflow-hidden">
           <Table>
             <TableHead>
               <tr>
@@ -177,7 +204,7 @@ export default function DomainsPage() {
               {domains.map(domain => (
                 <tr key={domain.id} className="hover:bg-bg-page transition-colors">
                   <Td>
-                    <span className="font-mono text-sm text-[#1f2937]">{domain.domain}</span>
+                    <span className="font-mono text-sm text-text-primary">{domain.domain}</span>
                   </Td>
                   <Td>
                     <span
@@ -193,10 +220,12 @@ export default function DomainsPage() {
                     </span>
                   </Td>
                   <Td>
-                    <span className="text-xs text-[#6b7280] capitalize">{domain.frequency}</span>
+                    <span className="text-xs text-text-secondary">
+                      {getFrequencyLabel(domain.frequency)}
+                    </span>
                   </Td>
                   <Td>
-                    <span className="text-xs text-[#6b7280]">
+                    <span className="text-xs text-text-secondary">
                       {domain.last_scan_id ? '✓' : '—'}
                     </span>
                   </Td>
@@ -204,7 +233,7 @@ export default function DomainsPage() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => setDeleteTarget(domain)}
-                        className="p-1.5 rounded hover:bg-danger-bg text-[#6b7280] hover:text-danger focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
+                        className="p-1.5 rounded hover:bg-danger-bg text-text-secondary hover:text-danger focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
                         aria-label={`Remove ${domain.domain}`}
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -215,7 +244,7 @@ export default function DomainsPage() {
               ))}
             </TableBody>
           </Table>
-          <div className="px-4 py-3 border-t border-[#e5e7eb] text-xs text-[#6b7280]">
+          <div className="px-4 py-3 border-t border-border text-xs text-text-secondary">
             {domainsQuery.data?.count ?? domains.length} domain
             {(domainsQuery.data?.count ?? domains.length) !== 1 ? 's' : ''} monitored
           </div>
@@ -223,7 +252,7 @@ export default function DomainsPage() {
       )}
 
       
-      <Modal open={addOpen} onClose={() => { setAddOpen(false); setAddError(null); }} title="Add Domain" size="sm">
+      <Modal open={addOpen} onClose={() => { setAddOpen(false); resetAddForm(); }} title="Add Domain" size="sm">
         <div className="space-y-4">
           <Input
             label="Domain"
@@ -231,18 +260,39 @@ export default function DomainsPage() {
             value={newDomain}
             onChange={e => { setNewDomain(e.target.value); setAddError(null); }}
             aria-label="Domain to monitor"
+            mono
           />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="domain-frequency" className="text-sm font-medium text-text-primary">
+              Scan frequency
+            </label>
+            <select
+              id="domain-frequency"
+              value={frequency}
+              onChange={e => {
+                setFrequency(e.target.value as DomainFrequencyKey);
+                setAddError(null);
+              }}
+              className="w-full border border-border-dark rounded-lg px-3 py-2 bg-bg-elevated text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page"
+            >
+              {DOMAIN_FREQUENCY_OPTIONS.map(opt => (
+                <option key={opt.key} value={opt.key}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
           {addError && (
             <p className="text-sm text-red-600" role="alert">{addError}</p>
           )}
           <div className="flex gap-3 justify-end">
-            <Button variant="ghost" size="md" onClick={() => { setAddOpen(false); setAddError(null); }}>
+            <Button variant="ghost" size="md" onClick={() => { setAddOpen(false); resetAddForm(); }}>
               Cancel
             </Button>
             <Button
               size="md"
               loading={addMutation.isPending}
-              onClick={() => addMutation.mutate()}
+              onClick={handleAddDomain}
               disabled={!newDomain.trim()}
             >
               Add Domain
@@ -258,9 +308,9 @@ export default function DomainsPage() {
         title="Remove Domain"
         size="sm"
       >
-        <p className="text-sm text-[#6b7280] mb-6">
+        <p className="text-sm text-text-secondary mb-6">
           Remove{' '}
-          <span className="font-mono font-semibold text-[#1f2937]">{deleteTarget?.domain}</span>{' '}
+          <span className="font-mono font-semibold text-text-primary">{deleteTarget?.domain}</span>{' '}
           from monitoring? All scheduled scans will stop.
         </p>
         <div className="flex gap-3 justify-end">

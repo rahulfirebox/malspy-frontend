@@ -97,15 +97,15 @@ export function RecommendationItem({
 }
 
 
-export function parseRecommendations(
-  recs: Record<string, Record<string, Record<string, unknown>>>
-): Array<{
+export function parseRecommendations(recs: unknown): Array<{
   key: string;
   title: string;
   description: string;
   severity: 'minor' | 'critical';
   affectedPages: string[];
 }> {
+  if (!recs || typeof recs !== 'object') return [];
+
   const items: Array<{
     key: string;
     title: string;
@@ -114,12 +114,16 @@ export function parseRecommendations(
     affectedPages: string[];
   }> = [];
 
-  for (const [section, entries] of Object.entries(recs)) {
+  for (const [section, entries] of Object.entries(recs as Record<string, unknown>)) {
+    if (!entries || typeof entries !== 'object') continue;
+
     const severity = section.endsWith('_critical') ? 'critical' : 'minor';
-    for (const [key, data] of Object.entries(entries)) {
+    for (const [key, data] of Object.entries(entries as Record<string, unknown>)) {
       const label = REC_LABELS[key] || { title: key, description: '' };
       const pages =
-        data && typeof data === 'object' && 'pages' in data ? (data.pages as string[]) : [];
+        data && typeof data === 'object' && 'pages' in data && Array.isArray(data.pages)
+          ? (data.pages as string[])
+          : [];
       items.push({
         key,
         title: label.title,

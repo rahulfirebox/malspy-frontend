@@ -7,24 +7,28 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { TopBar } from '@/components/dashboard/TopBar';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthHydration } from '@/hooks/useAuthHydration';
 import { useApiHealth } from '@/hooks/useApiHealth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const hydrated = useAuthHydration();
   const { isAuthenticated, isInitializing, logout } = useAuthStore();
   const router = useRouter();
   const { isHealthy } = useApiHealth();
 
   useEffect(() => {
-    if (isInitializing) return;
+    if (!hydrated || isInitializing) return;
     if (!isAuthenticated) {
       router.push(`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`);
     }
-  }, [isAuthenticated, isInitializing, router]);
+  }, [hydrated, isAuthenticated, isInitializing, router]);
 
   useEffect(() => {
     const handlePageShow = (e: PageTransitionEvent) => {
-      const { accessToken, isInitializing: bootstrapping } = useAuthStore.getState();
-      if (e.persisted && !bootstrapping && !accessToken) {
+      const persist = useAuthStore.persist;
+      if (persist && !persist.hasHydrated()) return;
+      const { accessToken, refreshToken, isInitializing: bootstrapping } = useAuthStore.getState();
+      if (e.persisted && !bootstrapping && !accessToken && !refreshToken) {
         window.location.replace('/login');
       }
     };
@@ -40,22 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => window.removeEventListener('storage', handleStorage);
   }, [logout]);
 
-  useEffect(() => {
-    const handleVisibility = () => {
-      const { accessToken, isInitializing: bootstrapping } = useAuthStore.getState();
-      if (
-        document.visibilityState === 'visible' &&
-        !bootstrapping &&
-        !accessToken
-      ) {
-        router.push('/login');
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [router]);
-
-  if (isInitializing || !isAuthenticated) return null;
+  if (!hydrated || isInitializing || !isAuthenticated) return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-page">

@@ -15,7 +15,7 @@ export function Skeleton({ className = '' }: SkeletonProps) {
 
 export function SkeletonCard() {
   return (
-    <div className="bg-white border border-border rounded-lg p-6 shadow-md">
+    <div className="bg-bg-card border border-border rounded-lg p-6 shadow-md">
       <Skeleton className="h-5 w-1/3 mb-4" />
       <Skeleton className="h-4 w-full mb-2" />
       <Skeleton className="h-4 w-2/3 mb-2" />
@@ -26,7 +26,7 @@ export function SkeletonCard() {
 
 export function SkeletonTable({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="bg-white border border-border rounded-lg shadow-md overflow-hidden">
+    <div className="bg-bg-card border border-border rounded-lg shadow-md overflow-hidden">
       <div className="border-b border-border p-4">
         <Skeleton className="h-5 w-32" />
       </div>
@@ -51,7 +51,7 @@ export function SkeletonList() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={`skeleton-item-${i}`}
-          className="bg-white border border-border rounded-lg p-4 flex gap-3"
+          className="bg-bg-card border border-border rounded-lg p-4 flex gap-3"
         >
           <Skeleton className="h-5 w-5 flex-shrink-0 rounded-full" />
           <div className="flex-1 space-y-2">

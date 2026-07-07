@@ -45,9 +45,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 style: {
                   background: 'var(--color-bg-card)',
                   color: 'var(--color-text-primary)',
-                  borderRadius: '8px',
-                  fontSize: '14px',
                   border: '1px solid var(--color-border)',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.45)',
+                },
+                success: {
+                  style: {
+                    background: 'var(--color-bg-card)',
+                    color: 'var(--color-text-primary)',
+                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                  },
+                  iconTheme: {
+                    primary: 'var(--color-success)',
+                    secondary: 'var(--color-bg-card)',
+                  },
+                },
+                error: {
+                  style: {
+                    background: 'var(--color-bg-card)',
+                    color: 'var(--color-text-primary)',
+                    border: '1px solid rgba(239, 68, 68, 0.35)',
+                  },
+                  iconTheme: {
+                    primary: 'var(--color-danger)',
+                    secondary: 'var(--color-bg-card)',
+                  },
                 },
               }}
             />

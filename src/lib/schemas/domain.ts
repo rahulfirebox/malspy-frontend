@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DOMAIN_FREQUENCY_KEYS } from '@/lib/constants/domainFrequency';
 
 export const AddDomainSchema = z.object({
   domain: z
@@ -6,7 +7,7 @@ export const AddDomainSchema = z.object({
     .min(1, 'Domain required')
     .max(500)
     .regex(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Enter a valid domain name'),
-  frequency: z.enum(['daily', 'weekly', 'monthly']).default('weekly'),
+  frequency: z.enum(DOMAIN_FREQUENCY_KEYS).default('daily'),
   notify_email: z.boolean().default(true),
   slack_webhook_url: z.string().url().nullable().default(null),
 });

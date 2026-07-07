@@ -14,33 +14,36 @@ import toast from 'react-hot-toast';
 export default function SettingsPage() {
   const qc = useQueryClient();
   const user = useAuthStore(s => s.user);
-  const userId = user?.id;
+  const accessToken = useAuthStore(s => s.accessToken);
+  const setUser = useAuthStore(s => s.setUser);
 
   const meQuery = useQuery({
-    queryKey: ['me', userId],
+    queryKey: ['me'],
     queryFn: () => authService.getMe(),
     staleTime: 30_000,
-    enabled: !!userId,
+    enabled: !!accessToken,
   });
 
-  const [name, setName] = useState(user?.name ?? '');
+  const profile = meQuery.data ?? user;
+
+  const [name, setName] = useState(profile?.name ?? '');
   const [nameError, setNameError] = useState('');
-  const [notifyEmail, setNotifyEmail] = useState(true);
+  const [notifyEmail, setNotifyEmail] = useState(profile?.notify_email ?? true);
 
   useEffect(() => {
-    if (meQuery.data) {
-      setName(meQuery.data.name ?? '');
-      setNotifyEmail(meQuery.data.notify_email ?? true);
-    }
-  }, [meQuery.data]);
+    if (!profile) return;
+    setName(profile.name ?? '');
+    setNotifyEmail(profile.notify_email ?? true);
+  }, [profile]);
 
   const updateMutation = useMutation({
     mutationFn: (data: { name: string; notify_email: boolean }) => authService.updateMe(data),
     retry: false,
-    onSuccess: () => {
+    onSuccess: updated => {
       setNameError('');
+      setUser(updated);
       toast.success('Settings saved');
-      void qc.invalidateQueries({ queryKey: ['me', userId] });
+      void qc.invalidateQueries({ queryKey: ['me'] });
     },
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: Record<string, string[]> } })?.response?.data;
@@ -48,19 +51,19 @@ export default function SettingsPage() {
     },
   });
 
-  if (meQuery.isPending && !meQuery.data) {
+  if (!profile && meQuery.isLoading) {
     return (
       <div className="space-y-6 max-w-xl">
-        <h1 className="text-xl font-bold text-[#1f2937]">Settings</h1>
-        <div className="h-48 bg-[#f4f6f8] rounded-lg motion-safe:animate-pulse" />
+        <h1 className="text-xl font-bold text-text-primary">Settings</h1>
+        <div className="h-48 bg-bg-elevated rounded-lg motion-safe:animate-pulse" />
       </div>
     );
   }
 
-  if (meQuery.isError) {
+  if (meQuery.isError && !profile) {
     return (
       <div className="space-y-6 max-w-xl">
-        <h1 className="text-xl font-bold text-[#1f2937]">Settings</h1>
+        <h1 className="text-xl font-bold text-text-primary">Settings</h1>
         <p className="text-sm text-[#dc2626]" role="alert">
           Failed to load settings.{' '}
           <button
@@ -76,16 +79,25 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-xl">
-      <h1 className="text-xl font-bold text-[#1f2937]">Settings</h1>
+      <h1 className="text-xl font-bold text-text-primary">Settings</h1>
+
+      {meQuery.isError && profile && (
+        <p className="text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2" role="status">
+          Could not refresh profile from server. Showing saved account info.
+        </p>
+      )}
 
       <Card>
-        <h2 className="font-semibold text-[#1f2937] mb-4">Profile</h2>
+        <h2 className="font-semibold text-text-primary mb-4">Profile</h2>
         <div className="space-y-4">
           <div>
             <Input
               label="Full Name"
               value={name}
-              onChange={e => { setName(e.target.value); setNameError(''); }}
+              onChange={e => {
+                setName(e.target.value);
+                setNameError('');
+              }}
               aria-label="Full name"
             />
             {nameError && (
@@ -93,8 +105,8 @@ export default function SettingsPage() {
             )}
           </div>
           <div>
-            <p className="text-sm font-medium text-[#1f2937] mb-1">Email</p>
-            <p className="text-sm text-[#6b7280] font-mono">{meQuery.data?.email ?? user?.email}</p>
+            <p className="text-sm font-medium text-text-primary mb-1">Email</p>
+            <p className="text-sm text-text-secondary font-mono">{profile?.email}</p>
           </div>
           <div className="flex items-center gap-3">
             <input
@@ -104,7 +116,7 @@ export default function SettingsPage() {
               onChange={e => setNotifyEmail(e.target.checked)}
               className="h-4 w-4 rounded border-[#d1d5db] text-[#2B7DBC] focus:ring-[#2B7DBC]"
             />
-            <label htmlFor="notify-email" className="text-sm text-[#1f2937]">
+            <label htmlFor="notify-email" className="text-sm text-text-primary">
               Receive email notifications for alerts
             </label>
           </div>
@@ -120,11 +132,11 @@ export default function SettingsPage() {
       </Card>
 
       <Card>
-        <h2 className="font-semibold text-[#1f2937] mb-2">Account</h2>
-        <p className="text-sm text-[#6b7280] mb-4">
+        <h2 className="font-semibold text-text-primary mb-2">Account</h2>
+        <p className="text-sm text-text-secondary mb-4">
           Role:{' '}
-          <span className="font-medium text-[#1f2937] capitalize">
-            {meQuery.data?.role ?? user?.role}
+          <span className="font-medium text-text-primary capitalize">
+            {profile?.role}
           </span>
         </p>
       </Card>

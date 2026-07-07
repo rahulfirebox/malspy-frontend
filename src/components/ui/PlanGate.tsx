@@ -25,7 +25,7 @@ export function PlanGate({ plan, children, fallback }: PlanGateProps) {
   if (fallback) return <>{fallback}</>;
 
   return (
-    <div className="bg-white border border-border-dark rounded-lg p-6 flex flex-col items-center justify-center py-16 text-center">
+    <div className="bg-bg-card border border-border-dark rounded-lg p-6 flex flex-col items-center justify-center py-16 text-center">
       <div className="w-12 h-12 rounded-lg bg-bg-page border border-border-dark flex items-center justify-center mb-4">
         <Lock className="h-6 w-6 text-text-secondary" aria-hidden="true" />
       </div>

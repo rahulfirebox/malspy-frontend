@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuthStore } from '@/stores/authStore';
 import { domainService } from '@/services/domainService';
 import { formatDateShort } from '@/lib/apiUtils';
+import { getFrequencyLabel } from '@/lib/constants/domainFrequency';
 import toast from 'react-hot-toast';
 import type { ScanListItem } from '@/types';
 
@@ -132,7 +133,7 @@ export default function DomainDetailPage() {
           </div>
           <div>
             <p className="text-xs text-[#5B5B6B] mb-1">Frequency</p>
-            <span className="text-sm text-[#0E0E14] capitalize">{domain.frequency}</span>
+            <span className="text-sm text-[#0E0E14]">{getFrequencyLabel(domain.frequency)}</span>
           </div>
           <div>
             <p className="text-xs text-[#5B5B6B] mb-1">Monitoring</p>

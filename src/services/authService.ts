@@ -1,6 +1,10 @@
 import apiClient from './apiClient';
 import { API } from '@/lib/apiEndpoints';
-import { unwrapApiData } from '@/lib/apiUtils';
+import {
+  unwrapApiData,
+  normalizeAuthTokens,
+  extractUserFromAuthPayload,
+} from '@/lib/apiUtils';
 import { useAuthStore } from '@/stores/authStore';
 import type {
   LoginInput,
@@ -10,10 +14,16 @@ import type {
 } from '@/lib/schemas/auth';
 import type { LoginResponse, RegisterResponse, User } from '@/types';
 
+export interface LoginResult extends LoginResponse {
+  user?: User;
+}
+
 export const authService = {
-  async login(data: LoginInput): Promise<LoginResponse> {
+  async login(data: LoginInput): Promise<LoginResult> {
     const res = await apiClient.post(API.auth.login, data);
-    return unwrapApiData<LoginResponse>(res.data);
+    const tokens = normalizeAuthTokens(res.data);
+    const user = extractUserFromAuthPayload(res.data) ?? undefined;
+    return { ...tokens, user };
   },
 
   async register(data: RegisterInput): Promise<RegisterResponse> {
@@ -35,7 +45,7 @@ export const authService = {
 
   async refresh(refreshToken: string): Promise<{ access: string; refresh?: string }> {
     const res = await apiClient.post(API.auth.refresh, { refresh: refreshToken });
-    return unwrapApiData<{ access: string; refresh?: string }>(res.data);
+    return normalizeAuthTokens(res.data);
   },
 
   async logout(): Promise<void> {
@@ -50,11 +60,11 @@ export const authService = {
 
   async getMe(): Promise<User> {
     const res = await apiClient.get(API.auth.me);
-    return unwrapApiData<User>(res.data);
+    return extractUserFromAuthPayload(res.data) ?? unwrapApiData<User>(res.data);
   },
 
   async updateMe(data: { name: string; notify_email: boolean }): Promise<User> {
-    const res = await apiClient.patch<User>(API.auth.me, data);
-    return res.data;
+    const res = await apiClient.patch(API.auth.me, data);
+    return extractUserFromAuthPayload(res.data) ?? unwrapApiData<User>(res.data);
   },
 };

@@ -42,6 +42,9 @@ export const API = {
     detail: (id: string) => `/api-keys/${id}/`,
     revoke: (id: string) => `/api-keys/${id}/`,
   },
+
+// Billing endpoints
+
   billing: {
     plans: '/billing/plans/',
     currentPlan: '/billing/plan/',

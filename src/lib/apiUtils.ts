@@ -1,20 +1,42 @@
 import axios from 'axios';
-import type { PaginatedResponse } from '@/types';
+import type { PaginatedResponse, User } from '@/types';
 import type { AxiosResponse } from 'axios';
 
 export interface ParsedApiError {
   code: string;
   message: string;
+  scanId?: string;
+}
+
+function readScanIdFromErrorBody(errorBody: unknown): string | undefined {
+  if (!isRecord(errorBody)) return undefined;
+
+  for (const key of ['scan_id', 'existing_scan_id', 'id'] as const) {
+    if (typeof errorBody[key] === 'string') return errorBody[key];
+  }
+
+  if (isRecord(errorBody.details)) {
+    for (const key of ['scan_id', 'existing_scan_id', 'id'] as const) {
+      if (typeof errorBody.details[key] === 'string') return errorBody.details[key];
+    }
+  }
+
+  return undefined;
 }
 
 export function parseApiError(error: unknown): ParsedApiError {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
-      | { error?: { code?: string; message?: string } }
-      | undefined;
-    const code = data?.error?.code ?? 'UNKNOWN_ERROR';
-    const message = data?.error?.message ?? 'An unexpected error occurred. Please try again.';
-    return { code, message };
+    const data = error.response?.data as { error?: Record<string, unknown> } | undefined;
+    const errBody = data?.error;
+    const code =
+      (typeof errBody?.code === 'string' && errBody.code) ||
+      (typeof errBody?.error_code === 'string' && errBody.error_code) ||
+      'UNKNOWN_ERROR';
+    const message =
+      (typeof errBody?.message === 'string' && errBody.message) ||
+      'An unexpected error occurred. Please try again.';
+    const scanId = readScanIdFromErrorBody(errBody);
+    return { code, message, scanId };
   }
   if (error instanceof Error) {
     return { code: 'CLIENT_ERROR', message: error.message };
@@ -33,6 +55,45 @@ export function unwrapApiData<T>(body: unknown): T {
     return body.data as T;
   }
   return body as T;
+}
+
+export function normalizeAuthTokens(payload: unknown): { access: string; refresh: string } {
+  const data = unwrapApiData<Record<string, unknown>>(payload);
+
+  const readPair = (source: Record<string, unknown>) => {
+    const access =
+      (typeof source.access === 'string' && source.access) ||
+      (typeof source.access_token === 'string' && source.access_token) ||
+      null;
+    const refresh =
+      (typeof source.refresh === 'string' && source.refresh) ||
+      (typeof source.refresh_token === 'string' && source.refresh_token) ||
+      '';
+
+    if (access) return { access, refresh };
+    return null;
+  };
+
+  const direct = readPair(data);
+  if (direct) return direct;
+
+  if (isRecord(data.tokens)) {
+    const nested = readPair(data.tokens);
+    if (nested) return nested;
+  }
+
+  throw new Error('Invalid auth response: missing access token');
+}
+
+export function extractUserFromAuthPayload(payload: unknown): User | null {
+  const data = unwrapApiData<Record<string, unknown>>(payload);
+  if (isRecord(data.user) && typeof data.user.email === 'string') {
+    return data.user as User;
+  }
+  if (typeof data.id === 'string' && typeof data.email === 'string') {
+    return data as unknown as User;
+  }
+  return null;
 }
 
 function extractResultItems<T>(payload: Record<string, unknown>): T[] {
@@ -62,8 +123,7 @@ export function parsePaginatedResponse<T>(
 
   if (isRecord(unwrapped)) {
     const results = extractResultItems<T>(unwrapped);
-    const count =
-      typeof unwrapped.count === 'number' ? unwrapped.count : results.length;
+    const count = typeof unwrapped.count === 'number' ? unwrapped.count : null;
 
     return {
       results,
@@ -75,7 +135,7 @@ export function parsePaginatedResponse<T>(
     };
   }
 
-  return { results: [], count: 0, next: null, previous: null, page_size: 0 };
+  return { results: [], count: null, next: null, previous: null, page_size: 0 };
 }
 
 export function formatDate(iso: string): string {

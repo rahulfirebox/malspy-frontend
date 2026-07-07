@@ -1,47 +1,28 @@
 /** @type {import('next').NextConfig} */
 
+const backendUrl = (process.env.BACKEND_URL ?? '').replace(/\/$/, '')
 const isDev = process.env.NODE_ENV === 'development'
 
-const securityHeaders = [
-  { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'X-XSS-Protection', value: '1; mode=block' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-  {
-    key: 'Content-Security-Policy',
-    value: [
-      "default-src 'self'",
+function devHostname() {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000').hostname
+  } catch {
+    return 'localhost'
+  }
+}
 
-      // ✅ FIX HERE
-      `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""}`,
-
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
-      "font-src 'self'",
-      `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL ?? ''}`,
-      "frame-ancestors 'none'",
-    ].join('; '),
-  },
-]
-
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  productionBrowserSourceMaps: false,
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
+  skipTrailingSlashRedirect: true,
+
+  // LAN access in dev (e.g. http://192.168.1.40:3000) — set NEXT_PUBLIC_APP_URL in .env
+  ...(isDev ? { allowedDevOrigins: [devHostname(), 'localhost'] } : {}),
+
+  async rewrites() {
+    if (!backendUrl) return []
+    return [{ source: '/api/:path*', destination: `${backendUrl}/:path*/` }]
   },
-  headers: async () => [
-    {
-      source: '/(.*)',
-      headers: securityHeaders,
-    },
-  ],
 }
 
 export default nextConfig

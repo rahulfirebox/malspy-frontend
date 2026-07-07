@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { authService } from '@/services/authService';
 import { useAuthStore } from '@/stores/authStore';
 import { LoginSchema } from '@/lib/schemas/auth';
+import { parseApiError } from '@/lib/apiUtils';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -44,18 +45,16 @@ export default function LoginPage() {
     setTimeout(() => { submitCooldownRef.current = false; }, 2000);
     setLoading(true);
     try {
-      const tokens = await authService.login(result.data);
-      setAccessToken(tokens.access);
-      const user = await authService.getMe();
-      setAuth(tokens.access, tokens.refresh, user, user.organization);
+      const loginResult = await authService.login(result.data);
+      setAccessToken(loginResult.access);
+      const user = loginResult.user ?? (await authService.getMe());
+      setAuth(loginResult.access, loginResult.refresh, user, user.organization);
       const rawReturnUrl = searchParams.get('returnUrl');
-      router.replace(
-        rawReturnUrl && /^\/(?!\/|\\)/.test(rawReturnUrl) ? rawReturnUrl : '/dashboard'
-      );
+      const destination =
+        rawReturnUrl && /^\/(?!\/|\\)/.test(rawReturnUrl) ? rawReturnUrl : '/dashboard';
+      router.replace(destination);
     } catch (err: unknown) {
-      const apiErr = err as { response?: { data?: { error?: { message?: string } } } };
-      const msg = apiErr?.response?.data?.error?.message || 'Invalid email or password';
-      toast.error(msg);
+      toast.error(parseApiError(err).message);
     } finally {
       setLoading(false);
     }
@@ -69,11 +68,11 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-[920px]">
-      <div className="overflow-hidden rounded-2xl border border-border bg-bg-card shadow-[0_25px_60px_-15px_rgba(59,130,246,0.15)]">
+      <div className="overflow-hidden rounded-2xl border border-border bg-bg-card shadow-[0_25px_60px_-15px_rgba(37,99,235,0.2)]">
         <div className="grid lg:grid-cols-[1fr_1.05fr]">
           <div
             className="relative hidden lg:flex flex-col justify-between p-10 text-white overflow-hidden"
-            style={{ background: 'linear-gradient(145deg, #2B7DBC 0%, #1A5E8F 55%, #134a73 100%)' }}
+            style={{ background: 'linear-gradient(145deg, #2563EB 0%, #1D4ED8 55%, #1e3a8a 100%)' }}
           >
             <div
               className="pointer-events-none absolute inset-0 opacity-40"

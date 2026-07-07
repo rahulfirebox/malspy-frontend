@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Shield,
   Bug,
@@ -10,7 +9,6 @@ import {
   RefreshCw,
   ArrowRight,
   Zap,
-  Clock,
   Users,
 } from 'lucide-react';
 import { ScanInput } from '@/components/scan/ScanInput';
@@ -20,49 +18,23 @@ const navLinks = [
   { href: '#features', label: 'Features' },
   { href: '#how-it-works', label: 'How It Works' },
   { href: '#pricing', label: 'Pricing' },
-];
-
-const features = [
-  {
-    icon: Bug,
-    title: 'Malware Detection',
-    desc: 'Scan for JavaScript injections, hidden iframes, phishing code, and more.',
-    color: 'text-accent-green',
-    bg: 'bg-accent-green/10 glow-green',
-  },
-  {
-    icon: Globe,
-    title: 'Blacklist Status',
-    desc: 'Check 7 major security databases including Google, McAfee, and Norton.',
-    color: 'text-accent-amber',
-    bg: 'bg-accent-amber/10 glow-amber',
-  },
-  {
-    icon: Lock,
-    title: 'SSL/TLS Analysis',
-    desc: 'Verify certificate validity, expiry, HSTS, and cipher configuration.',
-    color: 'text-accent-purple',
-    bg: 'bg-accent-purple/10 glow-purple',
-  },
-];
-
-const stats = [
-  { icon: Globe, label: '10M+ Websites Scanned', color: 'text-primary' },
-  { icon: Clock, label: 'Instant Scan Results', color: 'text-accent-green' },
-  { icon: Users, label: 'Trusted by Web Developers', color: 'text-accent-purple' },
+  { href: '#about', label: 'About' },
 ];
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-bg-page text-text-primary">
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-border/50 bg-bg-page/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+    <div className="min-h-screen bg-bg-page text-text-primary landing-grid-bg">
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-bg-page/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <Shield className="h-7 w-7 text-primary" aria-hidden="true" />
             <span className="font-bold text-lg text-text-primary">SecureScan</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
+          <nav
+            className="hidden md:flex items-center gap-8"
+            aria-label="Main navigation"
+          >
             {navLinks.map(link => (
               <a
                 key={link.href}
@@ -74,16 +46,16 @@ export default function LandingPage() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/login"
-              className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
+              className="text-sm font-medium text-text-secondary hover:text-text-primary border border-border-dark px-4 py-2 rounded-lg transition-colors hidden sm:inline-flex"
             >
               Sign In
             </Link>
             <Link
               href="/register"
-              className="text-sm font-semibold bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition-colors glow-blue"
+              className="text-sm font-semibold bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition-colors shadow-glow"
             >
               Sign Up Free
             </Link>
@@ -91,81 +63,113 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <section id="hero" className="relative min-h-screen flex flex-col justify-center pt-16 overflow-hidden">
-        <Image
-          src="/image/heroBackgroundImage.png"
-          alt=""
-          fill
-          priority
-          className="object-cover object-center"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-bg-page/50" aria-hidden="true" />
+      <section className="relative overflow-hidden min-h-[520px] lg:min-h-[620px]">
         <div
-          className="absolute inset-0 bg-grid-pattern bg-grid opacity-30"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/image/hero-background.png')" }}
           aria-hidden="true"
         />
+        <div className="absolute inset-0 bg-gradient-to-r from-bg-page via-bg-page/92 to-bg-page/55 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-bg-page/20 via-transparent to-bg-page pointer-events-none" />
 
-        <div className="relative z-10 max-w-4xl mx-auto px-4 py-20 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent-green/40 bg-accent-green/10 text-accent-green text-sm font-medium mb-8">
-            <CheckCircle className="h-4 w-4" aria-hidden="true" />
-            100% Free · No Credit Card Required
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-5 tracking-tight leading-tight">
-            Free Website
-            <br />
-            <span className="text-primary">Security Scanner</span>
-          </h1>
-
-          <p className="text-lg text-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
-            Check for malware, blacklist status, and security vulnerabilities — instantly, for free.
-          </p>
-
-          <ScanInput variant="hero" />
-        </div>
-
-        <div className="relative z-10 border-t border-border/50 bg-bg-page/60 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto px-4 py-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {stats.map(({ icon: Icon, label, color }) => (
-              <div key={label} className="flex items-center justify-center gap-3">
-                <Icon className={`h-5 w-5 ${color}`} aria-hidden="true" />
-                <span className="text-sm font-medium text-text-secondary">{label}</span>
-              </div>
-            ))}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-16 lg:py-24">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-accent-green/30 bg-accent-green/10 px-3 py-1 text-xs font-semibold text-accent-green mb-6">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent-green" aria-hidden="true" />
+              100% Free
+            </span>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold leading-tight tracking-tight text-text-primary mb-5">
+              Free Website
+              <br />
+              <span className="text-primary">Security Scanner</span>
+            </h1>
+            <p className="text-lg text-text-secondary mb-8 max-w-lg leading-relaxed">
+              Check for malware, blacklist status, and security vulnerabilities — instantly,
+              for free.
+            </p>
+            <ScanInput variant="dark" />
           </div>
         </div>
       </section>
 
-      <section id="features" className="py-20 px-4 bg-bg-page">
-        <div className="max-w-5xl mx-auto">
+      <section id="features" className="py-20 px-4 border-t border-border/50">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-text-primary mb-3">What We Check</h2>
           <p className="text-center text-text-secondary mb-12 max-w-xl mx-auto">
-            Comprehensive security analysis powered by multi-layer scanning technology.
+            Comprehensive security analysis powered by industry-leading detection engines.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {features.map(({ icon: Icon, title, desc, color, bg }) => (
+            {[
+              {
+                icon: Bug,
+                color: 'text-accent-green',
+                glow: 'shadow-[0_0_30px_rgba(16,185,129,0.2)]',
+                bg: 'bg-accent-green/10 border-accent-green/20',
+                title: 'Malware Detection',
+                desc: 'Scan for JavaScript injections, hidden iframes, phishing code, and more.',
+              },
+              {
+                icon: Globe,
+                color: 'text-accent-orange',
+                glow: 'shadow-[0_0_30px_rgba(245,158,11,0.2)]',
+                bg: 'bg-accent-orange/10 border-accent-orange/20',
+                title: 'Blacklist Status',
+                desc: 'Check 7 major security databases including Google, McAfee, and Norton.',
+              },
+              {
+                icon: Lock,
+                color: 'text-accent-purple',
+                glow: 'shadow-[0_0_30px_rgba(139,92,246,0.2)]',
+                bg: 'bg-accent-purple/10 border-accent-purple/20',
+                title: 'SSL/TLS Analysis',
+                desc: 'Verify certificate validity, expiry, HSTS, and cipher configuration.',
+              },
+            ].map(f => (
               <div
-                key={title}
-                className="bg-bg-card border border-border rounded-xl p-6 text-center hover:border-primary/30 transition-colors group"
+                key={f.title}
+                className="glass-card rounded-xl p-6 text-center hover:border-primary/30 transition-colors group"
               >
                 <div
-                  className={`inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4 ${bg}`}
+                  className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border ${f.bg} ${f.glow}`}
                 >
-                  <Icon className={`h-7 w-7 ${color}`} aria-hidden="true" />
+                  <f.icon className={`h-6 w-6 ${f.color}`} aria-hidden="true" />
                 </div>
-                <h3 className="font-semibold text-text-primary mb-2">{title}</h3>
-                <p className="text-sm text-text-secondary mb-4">{desc}</p>
-                <span className="inline-flex items-center gap-1 text-sm text-primary group-hover:gap-2 transition-all">
-                  Learn more <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                <h3 className="font-semibold text-text-primary mb-2">{f.title}</h3>
+                <p className="text-sm text-text-secondary leading-relaxed">{f.desc}</p>
+                <span className="inline-flex items-center gap-1 mt-4 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  Learn more <ArrowRight className="h-3.5 w-3.5" />
                 </span>
               </div>
             ))}
           </div>
+
+          <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              { icon: Globe, color: 'text-primary', stat: '10M+', label: 'Websites Scanned' },
+              { icon: Zap, color: 'text-accent-green', stat: 'Instant', label: 'Scan Results' },
+              { icon: Users, color: 'text-accent-purple', stat: 'Trusted by', label: 'Developers & Agencies' },
+            ].map(item => (
+              <div
+                key={item.label}
+                className="flex items-center gap-4 rounded-xl border border-border/60 bg-bg-elevated/50 px-6 py-5"
+              >
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-bg-card border border-border">
+                  <item.icon className={`h-5 w-5 ${item.color}`} aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-text-primary">{item.stat}</p>
+                  <p className="text-sm text-text-secondary">{item.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section id="how-it-works" className="py-20 px-4 bg-bg-elevated/30 border-y border-border">
+      <section
+        id="how-it-works"
+        className="py-20 px-4 bg-bg-elevated/40 border-y border-border/50"
+      >
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-text-primary mb-12">How It Works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 text-center">
@@ -190,7 +194,7 @@ export default function LandingPage() {
               },
             ].map(item => (
               <div key={item.step}>
-                <div className="w-10 h-10 rounded-full bg-primary/20 text-primary font-bold text-lg flex items-center justify-center mx-auto mb-4 border border-primary/30">
+                <div className="w-10 h-10 rounded-full bg-primary/15 text-primary font-bold text-lg flex items-center justify-center mx-auto mb-4 border border-primary/30">
                   {item.step}
                 </div>
                 <item.icon className="h-8 w-8 mx-auto text-primary mb-3" aria-hidden="true" />
@@ -202,12 +206,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="py-20 px-4 bg-bg-page">
+      <section id="pricing" className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-text-primary mb-3">Simple Pricing</h2>
           <p className="text-center text-text-secondary mb-12">Start free, upgrade when you need more.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-bg-card border border-border rounded-xl p-6">
+            <div className="glass-card rounded-xl p-6">
               <h3 className="text-xl font-bold text-text-primary">Free</h3>
               <p className="text-3xl font-bold text-text-primary mt-2">
                 {formatCurrency(0)}
@@ -217,7 +221,7 @@ export default function LandingPage() {
                 {['5 scans/month', '1 domain', 'Basic security report', 'Blacklist check', 'SSL analysis'].map(
                   f => (
                     <li key={f} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-accent-green flex-shrink-0" aria-hidden="true" />
+                      <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />
                       {f}
                     </li>
                   )
@@ -225,13 +229,13 @@ export default function LandingPage() {
               </ul>
               <Link
                 href="/register"
-                className="mt-6 block w-full text-center py-2.5 border border-primary text-primary font-semibold rounded-lg hover:bg-primary-light transition-colors text-sm"
+                className="mt-6 block w-full text-center py-2.5 border border-primary text-primary font-semibold rounded-lg hover:bg-primary/10 transition-colors text-sm"
               >
                 Get Started Free
               </Link>
             </div>
 
-            <div className="bg-bg-card border-2 border-primary rounded-xl p-6 relative glow-blue">
+            <div className="glass-card rounded-xl p-6 border-primary/50 ring-1 ring-primary/40 relative shadow-glow">
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
                 Most Popular
               </span>
@@ -251,20 +255,20 @@ export default function LandingPage() {
                   'Scheduled scans',
                 ].map(f => (
                   <li key={f} className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-accent-green flex-shrink-0" aria-hidden="true" />
+                    <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
               </ul>
               <Link
                 href="/register"
-                className="mt-6 block w-full text-center py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors text-sm"
+                className="mt-6 block w-full text-center py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors text-sm shadow-glow"
               >
                 Start Pro Trial
               </Link>
             </div>
 
-            <div className="bg-bg-card border border-border rounded-xl p-6">
+            <div className="glass-card rounded-xl p-6">
               <h3 className="text-xl font-bold text-text-primary">Enterprise</h3>
               <p className="text-3xl font-bold text-text-primary mt-2">
                 {formatCurrency(99)}
@@ -281,7 +285,7 @@ export default function LandingPage() {
                   'Custom integrations',
                 ].map(f => (
                   <li key={f} className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-accent-green flex-shrink-0" aria-hidden="true" />
+                    <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
@@ -297,21 +301,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-16 px-4 bg-gradient-to-r from-primary/10 via-bg-elevated to-accent-purple/10 border-t border-border">
-        <div className="max-w-3xl mx-auto text-center">
-          <Zap className="h-10 w-10 text-primary mx-auto mb-4" aria-hidden="true" />
-          <h2 className="text-2xl font-bold text-text-primary mb-3">Ready to secure your website?</h2>
-          <p className="text-text-secondary mb-6">Run your first free scan in under 60 seconds.</p>
-          <a
-            href="#hero"
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-3 rounded-lg transition-colors glow-blue"
-          >
-            Scan Now <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </a>
-        </div>
-      </section>
-
-      <footer className="border-t border-border py-8 px-4 bg-bg-page">
+      <footer id="about" className="border-t border-border/60 py-10 px-4 bg-bg-elevated/30">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" aria-hidden="true" />

@@ -17,9 +17,9 @@ import toast from 'react-hot-toast';
 import type { PlanSlug } from '@/types';
 
 const PLAN_COLORS: Record<PlanSlug, string> = {
-  free: 'border-[#e5e7eb]',
+  free: 'border-border',
   pro: 'border-[#2B7DBC] ring-1 ring-[#2B7DBC]',
-  enterprise: 'border-[#e5e7eb]',
+  enterprise: 'border-border',
 };
 
 const PLAN_FEATURES: Record<PlanSlug, string[]> = {
@@ -129,7 +129,7 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-xl font-bold text-[#1f2937]">Billing & Plan</h1>
+      <h1 className="text-xl font-bold text-text-primary">Billing & Plan</h1>
       {planError && (
         <p className="text-sm text-[#dc2626]" role="alert">{planError}</p>
       )}
@@ -138,7 +138,7 @@ export default function BillingPage() {
       {billingQuery.data && (
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-[#1f2937]">Current Plan</h2>
+            <h2 className="font-semibold text-text-primary">Current Plan</h2>
             <div className="flex items-center gap-3">
               <span className="px-3 py-1 rounded-full text-sm font-semibold bg-[#EBF4FD] text-[#2B7DBC] capitalize">
                 {billingQuery.data.plan ?? 'free'}
@@ -159,8 +159,8 @@ export default function BillingPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-[#6b7280] mb-1">Scans Used</p>
-              <p className="text-lg font-semibold text-[#1f2937]">
+              <p className="text-xs text-text-secondary mb-1">Scans Used</p>
+              <p className="text-lg font-semibold text-text-primary">
                 {billingQuery.data.scan_quota_used}
                 {billingQuery.data.scan_quota_limit !== -1
                   ? ` / ${billingQuery.data.scan_quota_limit}`
@@ -184,8 +184,8 @@ export default function BillingPage() {
                 )}
             </div>
             <div>
-              <p className="text-xs text-[#6b7280] mb-1">Quota Resets</p>
-              <p className="text-sm text-[#1f2937]">
+              <p className="text-xs text-text-secondary mb-1">Quota Resets</p>
+              <p className="text-sm text-text-primary">
                 {billingQuery.data.quota_reset_at
                   ? formatDateShort(billingQuery.data.quota_reset_at)
                   : '\u2014'}
@@ -197,13 +197,13 @@ export default function BillingPage() {
 
       
       <div>
-        <h2 className="font-semibold text-[#1f2937] mb-4">Available Plans</h2>
+        <h2 className="font-semibold text-text-primary mb-4">Available Plans</h2>
         {plansQuery.isPending ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[0, 1, 2].map(i => (
               <div
                 key={`plan-skel-${i}`}
-                className="h-64 bg-[#f4f6f8] rounded-lg motion-safe:animate-pulse"
+                className="h-64 bg-bg-elevated rounded-lg motion-safe:animate-pulse"
               />
             ))}
           </div>
@@ -221,14 +221,14 @@ export default function BillingPage() {
                     Most Popular
                   </span>
                 )}
-                <h3 className="font-bold text-lg text-[#1f2937] mb-1">{plan.name}</h3>
+                <h3 className="font-bold text-lg text-text-primary mb-1">{plan.name}</h3>
                 <p className="text-2xl font-bold text-[#2B7DBC] mb-4">
                   ${plan.price_monthly}
-                  <span className="text-sm font-normal text-[#6b7280]">/mo</span>
+                  <span className="text-sm font-normal text-text-secondary">/mo</span>
                 </p>
                 <ul className="space-y-2 mb-6">
                   {PLAN_FEATURES[plan.slug as PlanSlug]?.map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-[#1f2937]">
+                    <li key={f} className="flex items-center gap-2 text-sm text-text-primary">
                       <CheckCircle
                         className="h-4 w-4 text-[#22c55e] flex-shrink-0"
                         aria-hidden="true"
@@ -281,17 +281,17 @@ export default function BillingPage() {
 
       
       <div>
-        <h2 className="font-semibold text-[#1f2937] mb-4">Invoices</h2>
+        <h2 className="font-semibold text-text-primary mb-4">Invoices</h2>
         {invoicesQuery.isPending ? (
           <SkeletonTable rows={4} />
         ) : invoicesQuery.isError ? (
           <ErrorState message="Failed to load invoices." onRetry={() => invoicesQuery.refetch()} />
         ) : invoices.length === 0 ? (
-          <div className="text-sm text-[#6b7280] bg-bg-card border border-[#e5e7eb] rounded-lg p-6 text-center">
+          <div className="text-sm text-text-secondary bg-bg-card border border-border rounded-lg p-6 text-center">
             No invoices yet.
           </div>
         ) : (
-          <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
+          <div className="bg-bg-card border border-border rounded-lg shadow-md overflow-hidden">
             <Table>
               <TableHead>
                 <tr>
@@ -305,12 +305,12 @@ export default function BillingPage() {
                 {invoices.map(inv => (
                   <tr key={inv.id} className="hover:bg-bg-page transition-colors">
                     <Td>
-                      <span className="font-mono text-sm text-[#1f2937]">
+                      <span className="font-mono text-sm text-text-primary">
                         {inv.id.slice(0, 8).toUpperCase()}
                       </span>
                     </Td>
                     <Td>
-                      <span className="text-sm text-[#1f2937]">${inv.amount}</span>
+                      <span className="text-sm text-text-primary">${inv.amount}</span>
                     </Td>
                     <Td>
                       <span
@@ -324,7 +324,7 @@ export default function BillingPage() {
                       </span>
                     </Td>
                     <Td>
-                      <span className="text-xs text-[#6b7280]">
+                      <span className="text-xs text-text-secondary">
                         {formatDateShort(inv.created_at)}
                       </span>
                     </Td>

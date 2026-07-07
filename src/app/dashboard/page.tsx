@@ -69,7 +69,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-text-primary">Dashboard</h1>
-        <Link href="/dashboard/scans/new">
+        <Link href="/dashboard/scans?new=1">
           <Button size="md">+ New Scan</Button>
         </Link>
       </div>
@@ -130,7 +130,7 @@ export default function DashboardPage() {
               title="No scans yet"
               description="Run your first website security scan."
               cta={
-                <Link href="/dashboard/scans/new">
+                <Link href="/dashboard/scans?new=1">
                   <Button size="sm">Start Scan</Button>
                 </Link>
               }

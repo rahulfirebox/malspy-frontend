@@ -10,6 +10,7 @@ export const alertService = {
     severity?: string;
     type?: string;
     is_resolved?: boolean;
+    page?: number;
     cursor?: string;
     page_size?: number;
   }): Promise<PaginatedResponse<Alert>> {

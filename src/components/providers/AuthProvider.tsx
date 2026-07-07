@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
+import axios from 'axios';
+import { getAuthSessionEpoch, isSessionStale, useAuthStore } from '@/stores/authStore';
 import { authService } from '@/services/authService';
+import { useAuthHydration } from '@/hooks/useAuthHydration';
 
 const PUBLIC_PATHS = [
   '/',
@@ -15,9 +17,12 @@ const PUBLIC_PATHS = [
   '/results',
 ];
 
+let bootstrapPromise: Promise<void> | null = null;
+
 async function bootstrapSession(): Promise<void> {
-  const { accessToken, refreshToken, setAccessToken, setUser, clearAuth, setInitialized } =
-    useAuthStore.getState();
+  const startEpoch = getAuthSessionEpoch();
+  const { setAccessToken, setUser, clearAuth, setInitialized } = useAuthStore.getState();
+  const { accessToken, refreshToken, user: cachedUser } = useAuthStore.getState();
 
   if (!accessToken && !refreshToken) {
     setInitialized();
@@ -25,52 +30,79 @@ async function bootstrapSession(): Promise<void> {
   }
 
   try {
-    let token = accessToken;
-    if (!token && refreshToken) {
+    if (!accessToken && refreshToken) {
       const refreshed = await authService.refresh(refreshToken);
-      token = refreshed.access;
-      setAccessToken(token);
+      if (isSessionStale(startEpoch)) return;
+
+      setAccessToken(refreshed.access);
+      if (refreshed.refresh) {
+        useAuthStore.setState({ refreshToken: refreshed.refresh });
+      }
     }
 
+    if (isSessionStale(startEpoch)) return;
+
     const user = await authService.getMe();
+    if (isSessionStale(startEpoch)) return;
+
     setUser(user);
-  } catch {
+  } catch (err) {
+    if (isSessionStale(startEpoch)) return;
+
+    const is401 = axios.isAxiosError(err) && err.response?.status === 401;
+    if (is401) {
+      clearAuth();
+      return;
+    }
+
+    // Network/server error — keep cached session if available
+    if (cachedUser && (accessToken || refreshToken)) {
+      useAuthStore.setState({
+        user: cachedUser,
+        org: cachedUser.organization,
+        isAuthenticated: true,
+        isInitializing: false,
+      });
+      return;
+    }
+
     clearAuth();
+  } finally {
+    if (useAuthStore.getState().isInitializing && !isSessionStale(startEpoch)) {
+      setInitialized();
+    }
   }
 }
 
+function ensureBootstrap(): Promise<void> {
+  if (!bootstrapPromise) {
+    bootstrapPromise = bootstrapSession().finally(() => {
+      bootstrapPromise = null;
+    });
+  }
+  return bootstrapPromise;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const hydrated = useAuthHydration();
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const isInitializing = useAuthStore(s => s.isInitializing);
   const router = useRouter();
   const pathname = usePathname();
-  const bootstrapStarted = useRef(false);
 
   useEffect(() => {
-    if (bootstrapStarted.current) return;
-
-    const runBootstrap = () => {
-      if (bootstrapStarted.current) return;
-      bootstrapStarted.current = true;
-      void bootstrapSession();
-    };
-
-    if (useAuthStore.persist.hasHydrated()) {
-      runBootstrap();
-      return;
-    }
-
-    return useAuthStore.persist.onFinishHydration(runBootstrap);
-  }, []);
+    if (!hydrated) return;
+    void ensureBootstrap();
+  }, [hydrated]);
 
   useEffect(() => {
-    if (isInitializing) return;
+    if (!hydrated || isInitializing) return;
 
     const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith('/results'));
     if (!isAuthenticated && !isPublic && pathname.startsWith('/dashboard')) {
       router.push(`/login?returnUrl=${encodeURIComponent(pathname)}`);
     }
-  }, [isAuthenticated, isInitializing, pathname, router]);
+  }, [hydrated, isAuthenticated, isInitializing, pathname, router]);
 
   return <>{children}</>;
 }

@@ -10,8 +10,10 @@ import { SiteDetailsTabs } from './SiteDetailsTabs';
 import { RecommendationItem, parseRecommendations } from './RecommendationItem';
 import { SslTlsCard } from './SslTlsCard';
 import { WebsiteInfoCard } from './WebsiteInfoCard';
+import { MalwareFindingsList, collectMalwareFindings } from './MalwareFindingsList';
 import { formatDate } from '@/lib/apiUtils';
-import { Shield } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import { Shield, AlertTriangle } from 'lucide-react';
 
 const bannerConfig: Record<
   OverallRating,
@@ -46,24 +48,23 @@ const bannerConfig: Record<
 interface ScanResultLayoutProps {
   scan: ScanDetail;
   authActions?: React.ReactNode;
+  embedded?: boolean;
 }
 
-export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
+export function ScanResultLayout({ scan, authActions, embedded = false }: ScanResultLayoutProps) {
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+  const showPromoSidebar = !embedded && !isAuthenticated;
   const rating = scan.ratings?.total?.rating as OverallRating | undefined;
   const banner = rating ? bannerConfig[rating] : bannerConfig['B'];
-  const recs = useMemo(
-    () => parseRecommendations(
-      scan.recommendations as Record<string, Record<string, Record<string, unknown>>>
-    ),
-    [scan.recommendations]
-  );
+  const malwareFindings = useMemo(() => collectMalwareFindings(scan), [scan]);
+  const recs = useMemo(() => parseRecommendations(scan.recommendations ?? null), [scan.recommendations]);
 
   return (
-    <div className="min-h-screen bg-bg-page">
+    <div className={embedded ? '' : 'min-h-screen bg-bg-page'}>
       <div
-        className={`w-full border-b py-4 px-6 ${banner.bgClass} ${banner.borderClass}`}
+        className={`w-full border-b py-4 ${embedded ? 'px-0' : 'px-6'} ${banner.bgClass} ${banner.borderClass}`}
       >
-        <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-2">
+        <div className={`${embedded ? '' : 'max-w-6xl mx-auto'} flex items-center justify-between flex-wrap gap-2`}>
           <div>
             <p className={`text-sm font-medium ${banner.textClass}`}>
               Results for <span className="font-mono font-bold">{scan.domain}</span>
@@ -76,8 +77,10 @@ export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+      <div className={`${embedded ? '' : 'max-w-6xl mx-auto px-4 py-8'}`}>
+        <div
+          className={`grid grid-cols-1 ${showPromoSidebar ? 'lg:grid-cols-[1fr_320px]' : ''} gap-6`}
+        >
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -89,13 +92,30 @@ export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
               <div className="flex flex-col items-center mb-6">
                 {rating && <RatingBadgeLarge rating={rating} />}
               </div>
-              {scan.ratings ? (
+
+              {(scan.malware_detected || malwareFindings.length > 0) && (
+                <div className="mb-6 flex items-start gap-2 rounded-lg border border-red-200 bg-danger-bg px-4 py-3">
+                  <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-semibold text-rating-d-text">Malware detected</p>
+                    <p className="text-xs text-text-secondary mt-0.5">
+                      {malwareFindings.length > 0
+                        ? `${malwareFindings.length} finding${malwareFindings.length !== 1 ? 's' : ''} reported by the scanner.`
+                        : 'The scanner flagged potential malware on this site.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* {scan.ratings ? (
                 <SecurityRatingCards ratings={scan.ratings} />
               ) : (
                 <p className="text-sm text-text-secondary text-center py-4">
                   Rating details are not available for this scan yet.
                 </p>
-              )}
+              )} */}
+
+              <MalwareFindingsList findings={malwareFindings} />
             </Card>
 
             <WebsiteInfoCard
@@ -167,6 +187,7 @@ export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
             </Card>
           </div>
 
+          {showPromoSidebar && (
           <div className="space-y-4">
             <Card className="border-primary">
               <h3 className="text-sm font-semibold text-text-primary mb-2">Protect Your Website</h3>
@@ -188,7 +209,7 @@ export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
               </p>
               <a
                 href="/register"
-                className="block w-full text-center py-2 bg-bg-card border border-primary text-primary text-sm font-semibold rounded-md hover:bg-primary-light transition-colors"
+                className="block w-full text-center py-2 bg-white border border-primary text-primary text-sm font-semibold rounded-md hover:bg-primary-light transition-colors"
               >
                 Start Monitoring
               </a>
@@ -201,12 +222,13 @@ export function ScanResultLayout({ scan, authActions }: ScanResultLayoutProps) {
               </p>
               <a
                 href="/register"
-                className="block w-full text-center py-2 bg-bg-card border border-border-dark text-text-secondary text-sm font-semibold rounded-md hover:bg-bg-page transition-colors"
+                className="block w-full text-center py-2 bg-white border border-border-dark text-text-secondary text-sm font-semibold rounded-md hover:bg-bg-page transition-colors"
               >
                 Upgrade for PDF
               </a>
             </Card>
           </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const FOCUSABLE_SELECTORS = [
@@ -113,7 +113,10 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
     sm: 'max-w-sm',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
+    xl: 'max-w-6xl max-h-[90vh] flex flex-col',
   };
+
+  const isScrollable = size === 'xl';
 
   return (
     <div
@@ -128,9 +131,9 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
       <FocusTrap
         active={open}
         onEscape={onClose}
-        className={`bg-white rounded-xl shadow-lg w-full ${sizeClasses[size]} outline-none`}
+        className={`bg-bg-card rounded-xl shadow-lg w-full ${sizeClasses[size]} outline-none`}
       >
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border shrink-0">
           <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
             {title}
           </h2>
@@ -142,7 +145,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className={`p-6 ${isScrollable ? 'overflow-y-auto flex-1 min-h-0' : ''}`}>{children}</div>
       </FocusTrap>
     </div>
   );

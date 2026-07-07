@@ -2,11 +2,10 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { Shield, Trash2, FileDown } from 'lucide-react';
+import { Shield, Trash2, FileDown, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Table, TableHead, TableBody, Th, Td } from '@/components/ui/Table';
@@ -16,9 +15,13 @@ import { SkeletonTable } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
+import { NewScanModal } from '@/components/scan/NewScanModal';
 import { scanService } from '@/services/scanService';
 import { useAuthStore } from '@/stores/authStore';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useUrlPagination } from '@/hooks/useUrlPagination';
+import { applyPageToSearchParams } from '@/lib/pagination';
+import { Pagination } from '@/components/ui/Pagination';
 import { formatDateShort } from '@/lib/apiUtils';
 import toast from 'react-hot-toast';
 import type { ScanListItem } from '@/types';
@@ -30,8 +33,30 @@ export default function ScansPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [deleteTarget, setDeleteTarget] = useState<ScanListItem | null>(null);
+  const [showNewScanModal, setShowNewScanModal] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
+  const [rescanningId, setRescanningId] = useState<string | null>(null);
+  const { page, pageSize, cursor, apiParams, goNext, goPrevious, getMeta } = useUrlPagination(10);
+
+  function openScanDetail(scanId: string) {
+    router.push(`/dashboard/scans/${scanId}`);
+  }
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setShowNewScanModal(true);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('new');
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }
+  }, [searchParams, router, pathname]);
+
+  function handleScanStarted(scanId: string) {
+    void qc.invalidateQueries({ queryKey: ['scans', userId] });
+    router.push(`/dashboard/scans/${scanId}`);
+  }
 
   async function handlePdfDownload(scan: ScanListItem) {
     setDownloadingPdfId(scan.id);
@@ -51,21 +76,27 @@ export default function ScansPage() {
     const params = new URLSearchParams(searchParams.toString());
     if (val) params.set('q', val);
     else params.delete('q');
-    params.delete('page');
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    const nextParams = applyPageToSearchParams(params, 1);
+    const qs = nextParams.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
   const debouncedSearch = useDebounce(search, 300);
 
   const scansQuery = useQuery({
-    queryKey: ['scans', userId, { q: debouncedSearch }],
-    queryFn: () => scanService.listScans({ q: debouncedSearch || undefined }),
+    queryKey: ['scans', userId, { q: debouncedSearch, page, cursor, pageSize }],
+    queryFn: () =>
+      scanService.listScans({
+        q: debouncedSearch || undefined,
+        ...apiParams,
+      }),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
     enabled: !!userId,
   });
 
   const scans = useMemo(() => scansQuery.data?.results ?? [], [scansQuery.data]);
+  const paginationMeta = getMeta(scansQuery.data);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => scanService.deleteScan(id),
@@ -80,13 +111,28 @@ export default function ScansPage() {
     onError: () => setDeleteError('Failed to delete scan. Please try again.'),
   });
 
+  const rescanMutation = useMutation({
+    mutationFn: (id: string) => scanService.rescan(id),
+    retry: false,
+    onMutate: id => {
+      setRescanningId(id);
+    },
+    onSuccess: data => {
+      toast.success('Rescan started!');
+      void qc.invalidateQueries({ queryKey: ['scans', userId] });
+      router.push(`/dashboard/scans/${data.id}`);
+    },
+    onError: () => toast.error('Failed to start rescan. Please try again.'),
+    onSettled: () => setRescanningId(null),
+  });
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1f2937]">Scans</h1>
-        <Link href="/dashboard/scans/new">
-          <Button size="md">+ New Scan</Button>
-        </Link>
+        <h1 className="text-xl font-bold text-text-primary">Scans</h1>
+        <Button size="md" onClick={() => setShowNewScanModal(true)}>
+          + New Scan
+        </Button>
       </div>
 
       <div className="max-w-sm">
@@ -101,7 +147,7 @@ export default function ScansPage() {
 
       {scansQuery.isFetching && !scansQuery.isLoading && (
         <div className="flex justify-end">
-          <span className="text-xs text-[#6b7280]">Refreshing…</span>
+          <span className="text-xs text-text-secondary">Refreshing…</span>
         </div>
       )}
 
@@ -120,14 +166,14 @@ export default function ScansPage() {
           }
           cta={
             !debouncedSearch ? (
-              <Link href="/dashboard/scans/new">
-                <Button size="sm">Start Scan</Button>
-              </Link>
+              <Button size="sm" onClick={() => setShowNewScanModal(true)}>
+                Start Scan
+              </Button>
             ) : undefined
           }
         />
       ) : (
-        <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md overflow-hidden">
+        <div className="bg-bg-card border border-border rounded-lg shadow-md overflow-hidden">
           <Table>
             <TableHead>
               <tr>
@@ -141,17 +187,25 @@ export default function ScansPage() {
             </TableHead>
             <TableBody>
               {scans.map(scan => (
-                <tr key={scan.id} className="hover:bg-bg-page transition-colors">
+                <tr
+                  key={scan.id}
+                  className="hover:bg-bg-page transition-colors cursor-pointer"
+                  onClick={() => openScanDetail(scan.id)}
+                >
                   <Td>
                     <RatingBadgeSmall rating={scan.rating} />
                   </Td>
                   <Td>
-                    <Link
-                      href={`/dashboard/scans/${scan.id}`}
-                      className="font-mono text-sm text-[#2B7DBC] hover:underline"
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        openScanDetail(scan.id);
+                      }}
+                      className="font-mono text-sm text-[#2B7DBC] hover:underline text-left"
                     >
                       {scan.domain}
-                    </Link>
+                    </button>
                   </Td>
                   <Td>
                     <ScanStatusChip status={scan.status} />
@@ -160,32 +214,47 @@ export default function ScansPage() {
                     <MalwareStatusChip detected={scan.malware_detected} />
                   </Td>
                   <Td>
-                    <span className="text-xs text-[#6b7280]">
+                    <span className="text-xs text-text-secondary">
                       {formatDateShort(scan.created_at)}
                     </span>
                   </Td>
                   <Td>
-                    <div className="flex items-center gap-1">
-                      <Link href={`/dashboard/scans/${scan.id}`}>
+                    <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => openScanDetail(scan.id)}
+                        className="p-1.5 rounded hover:bg-bg-page text-text-secondary hover:text-primary focus:outline-none focus:ring-2 focus:ring-[#2B7DBC]"
+                        aria-label={`View scan for ${scan.domain}`}
+                      >
+                        <Shield className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                      {(scan.status === 'completed' || scan.status === 'failed') && (
                         <button
-                          className="p-1.5 rounded hover:bg-bg-page text-[#6b7280] hover:text-primary focus:outline-none focus:ring-2 focus:ring-[#2B7DBC]"
-                          aria-label={`View scan for ${scan.domain}`}
+                          type="button"
+                          onClick={() => rescanMutation.mutate(scan.id)}
+                          disabled={rescanningId === scan.id}
+                          className="p-1.5 rounded hover:bg-bg-page text-text-secondary hover:text-primary focus:outline-none focus:ring-2 focus:ring-[#2B7DBC] disabled:opacity-50 disabled:cursor-not-allowed"
+                          aria-label={`Rescan ${scan.domain}`}
+                          title="Rescan"
                         >
-                          <Shield className="h-4 w-4" aria-hidden="true" />
+                          <RefreshCw
+                            className={`h-4 w-4 ${rescanningId === scan.id ? 'animate-spin' : ''}`}
+                            aria-hidden="true"
+                          />
                         </button>
-                      </Link>
+                      )}
                       <button
                         type="button"
                         onClick={() => void handlePdfDownload(scan)}
                         disabled={downloadingPdfId === scan.id}
-                        className="p-1.5 rounded hover:bg-bg-page text-[#6b7280] hover:text-primary focus:outline-none focus:ring-2 focus:ring-[#2B7DBC] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-1.5 rounded hover:bg-bg-page text-text-secondary hover:text-primary focus:outline-none focus:ring-2 focus:ring-[#2B7DBC] disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label={`Download PDF for ${scan.domain}`}
                       >
                         <FileDown className="h-4 w-4" aria-hidden="true" />
                       </button>
                       <button
                         onClick={() => setDeleteTarget(scan)}
-                        className="p-1.5 rounded hover:bg-danger-bg text-[#6b7280] hover:text-danger focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
+                        className="p-1.5 rounded hover:bg-danger-bg text-text-secondary hover:text-danger focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
                         aria-label={`Delete scan for ${scan.domain}`}
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -196,22 +265,30 @@ export default function ScansPage() {
               ))}
             </TableBody>
           </Table>
-          <div className="px-4 py-3 border-t border-[#e5e7eb] text-xs text-[#6b7280]">
-            Showing {scans.length} of {scansQuery.data?.count ?? 0} scans
-          </div>
+          <Pagination
+            meta={paginationMeta}
+            onNext={() => goNext(scansQuery.data?.next)}
+            onPrevious={() => goPrevious(scansQuery.data?.previous)}
+          />
         </div>
       )}
 
       
+      <NewScanModal
+        open={showNewScanModal}
+        onClose={() => setShowNewScanModal(false)}
+        onScanStarted={handleScanStarted}
+      />
+
       <Modal
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         title="Delete Scan"
         size="sm"
       >
-        <p className="text-sm text-[#6b7280] mb-4">
+        <p className="text-sm text-text-secondary mb-4">
           Are you sure you want to delete the scan for{' '}
-          <span className="font-mono font-semibold text-[#1f2937]">{deleteTarget?.domain}</span>?
+          <span className="font-mono font-semibold text-text-primary">{deleteTarget?.domain}</span>?
           This action cannot be undone.
         </p>
         {deleteError && (

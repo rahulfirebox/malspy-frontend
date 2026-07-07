@@ -1,5 +1,6 @@
 import apiClient from './apiClient';
 import { parsePaginatedResponse } from '@/lib/apiUtils';
+import { randomUUID } from '@/lib/uuid';
 import { API } from '@/lib/apiEndpoints';
 import type {} from '@/lib/schemas/responses';
 import type { CashfreeOrder, Invoice, PaginatedResponse, Plan } from '@/types';
@@ -37,7 +38,7 @@ export const billingService = {
     const res = await apiClient.post<CashfreeOrder>(
       API.billing.createOrder,
       { plan_slug: planSlug },
-      { headers: { 'Idempotency-Key': crypto.randomUUID() } }
+      { headers: { 'Idempotency-Key': randomUUID() } }
     );
     return res.data;
   },
@@ -53,7 +54,7 @@ export const billingService = {
     const res = await apiClient.post<Plan>(
       API.billing.upgrade,
       { plan_slug: planSlug, billing_period: 'monthly' },
-      { headers: { 'Idempotency-Key': crypto.randomUUID() } }
+      { headers: { 'Idempotency-Key': randomUUID() } }
     );
     return res.data;
   },
@@ -62,7 +63,7 @@ export const billingService = {
     await apiClient.post(
       API.billing.cancel,
       {},
-      { headers: { 'Idempotency-Key': crypto.randomUUID() } }
+      { headers: { 'Idempotency-Key': randomUUID() } }
     );
   },
 };

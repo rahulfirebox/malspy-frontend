@@ -11,6 +11,7 @@ interface AuthState {
   org: Organization | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
+  sessionEpoch: number;
   setAuth: (
     accessToken: string,
     refreshToken: string,
@@ -31,26 +32,40 @@ const CLEARED_STATE = {
   org: null as Organization | null,
   isAuthenticated: false,
   isInitializing: false,
+  sessionEpoch: 0,
 };
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    set => ({
+    (set, get) => ({
       ...CLEARED_STATE,
       isInitializing: true,
       setAuth: (accessToken, refreshToken, user, org) => {
-        set({ accessToken, refreshToken, user, org, isAuthenticated: true, isInitializing: false });
+        set({
+          accessToken,
+          refreshToken,
+          user,
+          org,
+          isAuthenticated: true,
+          isInitializing: false,
+          sessionEpoch: get().sessionEpoch + 1,
+        });
       },
       setAccessToken: accessToken => {
         set({ accessToken });
       },
       setUser: user =>
-        set({ user, org: user.organization, isAuthenticated: true, isInitializing: false }),
+        set({
+          user,
+          org: user.organization,
+          isAuthenticated: true,
+          isInitializing: false,
+        }),
       clearAuth: () => {
         import('@/lib/queryClient')
           .then(({ queryClient }) => queryClient.clear())
           .catch(() => undefined);
-        set(CLEARED_STATE);
+        set({ ...CLEARED_STATE, sessionEpoch: get().sessionEpoch + 1 });
       },
       setInitialized: () => {
         set({ isInitializing: false });
@@ -67,17 +82,53 @@ export const useAuthStore = create<AuthState>()(
           }
           const { queryClient } = await import('@/lib/queryClient');
           queryClient.clear();
-          set(CLEARED_STATE);
+          set({ ...CLEARED_STATE, sessionEpoch: get().sessionEpoch + 1 });
         }
       },
     }),
     {
       name: 'securescan-auth',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined'
+          ? localStorage
+          : {
+              getItem: () => null,
+              setItem: () => undefined,
+              removeItem: () => undefined,
+            }
+      ),
       partialize: state => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        user: state.user,
+        org: state.org,
       }),
+      merge: (persisted, current) => {
+        const saved = persisted as Partial<AuthState> | undefined;
+        const hasTokens = Boolean(saved?.accessToken || saved?.refreshToken);
+        return {
+          ...current,
+          ...saved,
+          isAuthenticated: hasTokens || Boolean(saved?.user),
+          isInitializing: hasTokens,
+        };
+      },
+      onRehydrateStorage: () => state => {
+        if (state && (state.accessToken || state.refreshToken)) {
+          state.isAuthenticated = true;
+          state.isInitializing = true;
+        }
+      },
     }
   )
 );
+
+function isSessionStale(startEpoch: number): boolean {
+  return useAuthStore.getState().sessionEpoch !== startEpoch;
+}
+
+export function getAuthSessionEpoch(): number {
+  return useAuthStore.getState().sessionEpoch;
+}
+
+export { isSessionStale };

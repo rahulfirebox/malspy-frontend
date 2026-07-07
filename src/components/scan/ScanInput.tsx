@@ -2,22 +2,22 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe } from 'lucide-react';
+import { Globe, CheckCircle } from 'lucide-react';
 import { scanService } from '@/services/scanService';
 import { PublicScanSchema } from '@/lib/schemas/scan';
-import toast from 'react-hot-toast';
+import { parseApiError } from '@/lib/apiUtils';
 
 interface ScanInputProps {
-  variant?: 'default' | 'hero';
+  variant?: 'light' | 'dark';
 }
 
-export function ScanInput({ variant = 'default' }: ScanInputProps) {
+export function ScanInput({ variant = 'light' }: ScanInputProps) {
   const router = useRouter();
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submitCooldownRef = useRef(false);
-  const isHero = variant === 'hero';
+  const isDark = variant === 'dark';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,76 +35,46 @@ export function ScanInput({ variant = 'default' }: ScanInputProps) {
     setLoading(true);
     try {
       const scan = await scanService.publicScan(result.data.url);
-      router.push(`/results/${encodeURIComponent(scan.domain)}?scan_id=${scan.scan_id}`);
-    } catch (err: unknown) {
-      const apiErr = err as { response?: { data?: { error?: { message?: string } } } };
-      if (apiErr?.response?.data?.error?.message) {
-        setError(apiErr.response.data.error.message);
-      } else {
-        toast.error('Failed to start scan. Please try again.');
+      if (!scan.scan_id) {
+        setError('Scan started but no result id was returned. Please try again.');
+        return;
       }
+      router.push(`/results/${scan.scan_id}`);
+    } catch (err: unknown) {
+      const apiErr = parseApiError(err);
+      setError(apiErr.message || 'Failed to start scan. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
-  if (isHero) {
-    return (
-      <div className="w-full max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3" noValidate>
-          <div className="relative flex-1">
+  const wrapperClass = isDark
+    ? 'w-full max-w-2xl'
+    : 'bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl mx-auto';
+
+  const labelClass = isDark
+    ? 'text-sm font-medium text-text-secondary mb-3 sr-only'
+    : 'text-sm font-medium text-text-secondary mb-3';
+
+  const inputClass = isDark
+    ? `w-full h-[52px] border rounded-lg pl-11 pr-4 font-mono text-text-primary placeholder-text-secondary bg-bg-elevated/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus:border-primary/50 transition ${
+        error ? 'border-danger' : 'border-border-dark'
+      }`
+    : `w-full h-[52px] border rounded-md px-4 font-mono text-text-primary placeholder-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus:border-transparent ${
+        error ? 'border-danger' : 'border-border-dark'
+      }`;
+
+  return (
+    <div className={wrapperClass}>
+      <p className={labelClass}>Enter your website URL to scan</p>
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3" noValidate>
+        <div className="flex-1 relative">
+          {isDark && (
             <Globe
               className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-secondary pointer-events-none"
               aria-hidden="true"
             />
-            <input
-              type="url"
-              value={url}
-              onChange={e => {
-                setUrl(e.target.value);
-                setError(null);
-              }}
-              placeholder="https://www.example.com"
-              className={`w-full h-[52px] pl-12 pr-4 bg-bg-card/80 backdrop-blur-sm border rounded-xl font-mono text-text-primary placeholder-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus:border-primary/50 transition ${
-                error ? 'border-danger' : 'border-border-dark'
-              }`}
-              aria-label="Website URL"
-              aria-describedby={error ? 'scan-error' : undefined}
-              disabled={loading}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-[52px] px-8 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page glow-blue"
-          >
-            {loading ? (
-              <>
-                <svg className="motion-safe:animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Scanning…
-              </>
-            ) : (
-              'Scan Website'
-            )}
-          </button>
-        </form>
-        {error && (
-          <p id="scan-error" className="text-sm text-danger mt-2 text-center sm:text-left">
-            {error}
-          </p>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-bg-card rounded-xl shadow-lg border border-border p-8 w-full max-w-2xl mx-auto">
-      <p className="text-sm font-medium text-text-secondary mb-3">Enter your website URL to scan</p>
-      <form onSubmit={handleSubmit} className="flex gap-3" noValidate>
-        <div className="flex-1">
+          )}
           <input
             type="url"
             value={url}
@@ -113,9 +83,7 @@ export function ScanInput({ variant = 'default' }: ScanInputProps) {
               setError(null);
             }}
             placeholder="https://www.example.com"
-            className={`w-full h-[52px] bg-bg-elevated border rounded-md px-4 font-mono text-text-primary placeholder-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus:border-transparent ${
-              error ? 'border-danger' : 'border-border-dark'
-            }`}
+            className={inputClass}
             aria-label="Website URL"
             aria-describedby={error ? 'scan-error' : undefined}
             disabled={loading}
@@ -129,13 +97,31 @@ export function ScanInput({ variant = 'default' }: ScanInputProps) {
         <button
           type="submit"
           disabled={loading}
-          className="h-[52px] px-6 bg-primary hover:bg-primary-dark text-white font-semibold rounded-md flex items-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          className={`h-[52px] px-8 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page ${
+            isDark ? 'shadow-glow' : ''
+          }`}
         >
           {loading ? (
             <>
-              <svg className="motion-safe:animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              <svg
+                className="motion-safe:animate-spin h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
               Scanning…
             </>
@@ -144,6 +130,16 @@ export function ScanInput({ variant = 'default' }: ScanInputProps) {
           )}
         </button>
       </form>
+      {isDark && (
+        <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-secondary">
+          {['No signup required', 'Instant results', '100% free forever'].map(item => (
+            <li key={item} className="flex items-center gap-1.5">
+              <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

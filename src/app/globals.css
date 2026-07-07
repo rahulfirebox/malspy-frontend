@@ -9,11 +9,11 @@ html {
 }
 
 :root {
-  --color-primary: #3b82f6;
-  --color-primary-dark: #2563eb;
-  --color-primary-light: rgba(59, 130, 246, 0.12);
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-light: rgba(37, 99, 235, 0.12);
   --color-accent-green: #10b981;
-  --color-accent-amber: #f59e0b;
+  --color-accent-orange: #f59e0b;
   --color-accent-purple: #8b5cf6;
   --color-success: #10b981;
   --color-warning-orange: #f59e0b;
@@ -22,17 +22,36 @@ html {
   --color-info: #3b82f6;
   --color-text-primary: #f8fafc;
   --color-text-secondary: #94a3b8;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-dark: rgba(255, 255, 255, 0.15);
-  --color-bg-page: #020617;
+  --color-border: #1e293b;
+  --color-bg-page: #050816;
   --color-bg-card: #0f172a;
-  --color-bg-elevated: #1e293b;
+  --color-bg-elevated: #111827;
+  --color-bg-sidebar: #070b14;
 }
 
 body {
   background-color: var(--color-bg-page);
   color: var(--color-text-primary);
   font-family: 'Inter', system-ui, sans-serif;
+}
+
+.landing-grid-bg {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: auto, auto, 48px 48px, 48px 48px;
+}
+
+.glow-blue {
+  box-shadow: 0 0 40px rgba(37, 99, 235, 0.35);
+}
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(12px);
 }
 
 @keyframes scale-in {
@@ -48,20 +67,4 @@ body {
 
 .animate-scale-in {
   animation: scale-in 0.3s ease-out;
-}
-
-.glow-blue {
-  box-shadow: 0 0 40px rgba(59, 130, 246, 0.35);
-}
-
-.glow-green {
-  box-shadow: 0 0 24px rgba(16, 185, 129, 0.3);
-}
-
-.glow-amber {
-  box-shadow: 0 0 24px rgba(245, 158, 11, 0.3);
-}
-
-.glow-purple {
-  box-shadow: 0 0 24px rgba(139, 92, 246, 0.3);
 }

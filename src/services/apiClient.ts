@@ -3,8 +3,9 @@ import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { tokenRefreshMutex } from '@/lib/tokenRefreshMutex';
-import { env } from '@/lib/env';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import { normalizeAuthTokens } from '@/lib/apiUtils';
+import { randomUUID } from '@/lib/uuid';
 
 function getCsrfToken(): string {
   const name = 'csrftoken';
@@ -44,11 +45,10 @@ export function getErrorBehavior(status: number): ErrorBehavior {
   return 'default';
 }
 
-let isRedirecting = false;
 let currentApiVersion: string | null = null;
 
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: `${env.NEXT_PUBLIC_API_URL}/api/v1`,
+  baseURL: getApiBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
   timeout: 30_000,
@@ -60,11 +60,11 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
-  config.headers['X-Request-ID'] = crypto.randomUUID();
+  config.headers['X-Request-ID'] = randomUUID();
 
   const method = config.method?.toUpperCase();
   if (method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    config.headers['Idempotency-Key'] = crypto.randomUUID();
+    config.headers['Idempotency-Key'] = randomUUID();
     const csrfToken = getCsrfToken();
     if (csrfToken) {
       config.headers['X-CSRFToken'] = csrfToken;
@@ -111,6 +111,11 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    const requestUrl = originalRequest.url ?? '';
+    if (requestUrl.includes('/auth/refresh/') || requestUrl.includes('/auth/login/')) {
+      return Promise.reject(error);
+    }
+
     
     if (tokenRefreshMutex.isRefreshing) {
       return new Promise((resolve, reject) => {
@@ -131,28 +136,24 @@ apiClient.interceptors.response.use(
       if (!storedRefreshToken) {
         throw new Error('No refresh token available');
       }
-      const res = await axios.post<{ access: string; refresh?: string }>(
-        `${env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh/`,
+      const res = await axios.post(
+        `${getApiBaseUrl()}/auth/refresh/`,
         { refresh: storedRefreshToken },
         { headers: { 'Content-Type': 'application/json' } }
       );
-      const newAccessToken = res.data.access;
+      const refreshed = normalizeAuthTokens(res.data);
+      const newAccessToken = refreshed.access;
       useAuthStore.getState().setAccessToken(newAccessToken);
+      if (refreshed.refresh) {
+        useAuthStore.setState({ refreshToken: refreshed.refresh });
+      }
       tokenRefreshMutex.resolve(newAccessToken);
       originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
       return apiClient(originalRequest);
     } catch {
       tokenRefreshMutex.reject();
-      if (!isRedirecting) {
-        isRedirecting = true;
+      if (!useAuthStore.getState().isInitializing) {
         useAuthStore.getState().clearAuth();
-        if (typeof window !== 'undefined') {
-          const currentUrl = window.location.pathname + window.location.search;
-          window.location.href = `/login?returnUrl=${encodeURIComponent(currentUrl)}`;
-          setTimeout(() => {
-            isRedirecting = false;
-          }, 3000);
-        }
       }
       return Promise.reject(error);
     }

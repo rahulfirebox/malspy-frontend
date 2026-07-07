@@ -255,7 +255,7 @@ export interface ScanDetail {
   tls_direct: TlsDirectInfo;
   whois: WhoisInfo;
   ratings: ScanRatings;
-  recommendations: ScanRecommendations;
+  recommendations: ScanRecommendations | null;
   malware: MalwareInfo;
   malware_findings_detail: MalwareFinding[];
   browser_scan: BrowserScanInfo;
@@ -311,16 +311,17 @@ export interface Domain {
 
 export interface Alert {
   id: string;
-  organization: string;
+  organization?: string;
   domain: string | null;
-  scan: string;
+  scan_domain?: string | null;
+  scan?: string;
   type: AlertType;
   severity: AlertSeverity;
   title: string;
   description: string;
   is_resolved: boolean;
-  resolved_by: string | null;
-  resolved_note: string | null;
+  resolved_by?: string | null;
+  resolved_note?: string | null;
   resolved_at: string | null;
   created_at: string;
 }
@@ -367,7 +368,7 @@ export interface ServerAgent {
 
 export interface PaginatedResponse<T> {
   results: T[];
-  count: number;
+  count: number | null;
   next: string | null;
   previous: string | null;
   page_size: number;

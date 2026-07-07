@@ -135,7 +135,7 @@ export default function ScanDetailPage() {
 
   if (isProcessing) {
     return (
-      <div className="bg-bg-card border border-[#e5e7eb] rounded-lg shadow-md">
+      <div className="bg-bg-card border border-border rounded-lg shadow-md">
         <ScanProgress domain={scan.domain} />
       </div>
     );
@@ -188,7 +188,7 @@ export default function ScanDetailPage() {
         title="Delete this scan?"
         size="sm"
       >
-        <p className="text-sm text-[#6b7280] mb-4">This action cannot be undone.</p>
+        <p className="text-sm text-text-secondary mb-4">This action cannot be undone.</p>
         {actionError && (
           <p className="text-sm text-[#dc2626] mb-4" role="alert">{actionError}</p>
         )}
