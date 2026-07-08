@@ -108,7 +108,7 @@ export default function SettingsPage() {
             <p className="text-sm font-medium text-text-primary mb-1">Email</p>
             <p className="text-sm text-text-secondary font-mono">{profile?.email}</p>
           </div>
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <input
               id="notify-email"
               type="checkbox"
@@ -119,7 +119,7 @@ export default function SettingsPage() {
             <label htmlFor="notify-email" className="text-sm text-text-primary">
               Receive email notifications for alerts
             </label>
-          </div>
+          </div> */}
           <Button
             size="md"
             loading={updateMutation.isPending}
@@ -130,7 +130,7 @@ export default function SettingsPage() {
           </Button>
         </div>
       </Card>
-
+{/* 
       <Card>
         <h2 className="font-semibold text-text-primary mb-2">Account</h2>
         <p className="text-sm text-text-secondary mb-4">
@@ -139,7 +139,7 @@ export default function SettingsPage() {
             {profile?.role}
           </span>
         </p>
-      </Card>
+      </Card> */}
     </div>
   );
 }

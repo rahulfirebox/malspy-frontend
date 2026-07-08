@@ -43,8 +43,6 @@ export const API = {
     revoke: (id: string) => `/api-keys/${id}/`,
   },
 
-// Billing endpoints
-
   billing: {
     plans: '/billing/plans/',
     currentPlan: '/billing/plan/',
@@ -53,6 +51,10 @@ export const API = {
     invoices: '/billing/invoices/',
     createOrder: '/billing/create-order/',
     verifyPayment: '/billing/verify-payment/',
+    webhooks: {
+      cashfree: '/billing/webhook/cashfree/',
+      stripe: '/billing/webhook/stripe/',
+    },
   },
   dashboard: {
     analytics: '/scan/analytics/',

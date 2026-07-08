@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, CheckCircle } from 'lucide-react';
+import { Globe, CheckCircle, Search } from 'lucide-react';
 import { scanService } from '@/services/scanService';
 import { PublicScanSchema } from '@/lib/schemas/scan';
 import { parseApiError } from '@/lib/apiUtils';
@@ -49,11 +49,11 @@ export function ScanInput({ variant = 'light' }: ScanInputProps) {
   }
 
   const wrapperClass = isDark
-    ? 'w-full max-w-2xl'
+    ? 'w-full max-w-3xl mx-auto rounded-2xl border border-border/60 bg-bg-card/55 backdrop-blur-md p-6 sm:p-8 shadow-[0_0_80px_rgba(37,99,235,0.12)]'
     : 'bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl mx-auto';
 
   const labelClass = isDark
-    ? 'text-sm font-medium text-text-secondary mb-3 sr-only'
+    ? 'text-sm font-medium text-text-primary mb-5 text-center'
     : 'text-sm font-medium text-text-secondary mb-3';
 
   const inputClass = isDark
@@ -126,13 +126,16 @@ export function ScanInput({ variant = 'light' }: ScanInputProps) {
               Scanning…
             </>
           ) : (
-            'Scan Website'
+            <>
+              <Search className="h-4 w-4" aria-hidden="true" />
+              Scan Website
+            </>
           )}
         </button>
       </form>
       {isDark && (
-        <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-secondary">
-          {['No signup required', 'Instant results', '100% free forever'].map(item => (
+        <ul className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-text-secondary">
+          {['No installation required', 'Instant results', 'Private & Secure'].map(item => (
             <li key={item} className="flex items-center gap-1.5">
               <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />
               {item}

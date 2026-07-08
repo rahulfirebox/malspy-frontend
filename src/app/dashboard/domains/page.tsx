@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Globe, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -12,12 +11,13 @@ import { Table, TableHead, TableBody, Th, Td } from '@/components/ui/Table';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Pagination } from '@/components/ui/Pagination';
 import { Modal } from '@/components/ui/Modal';
 import { domainService } from '@/services/domainService';
 import { useAuthStore } from '@/stores/authStore';
-import { useDebounce } from '@/hooks/useDebounce';
-import { formatDateShort, parseApiError } from '@/lib/apiUtils';
-import { ERROR_CODES } from '@/lib/constants/errorCodes';
+import { useDebouncedUrlSearch } from '@/hooks/useDebouncedUrlSearch';
+import { useUrlPagination } from '@/hooks/useUrlPagination';
+import { parseApiError, extractDomain } from '@/lib/apiUtils';
 import toast from 'react-hot-toast';
 import type { Domain } from '@/types';
 import { AddDomainSchema } from '@/lib/schemas/domain';
@@ -37,14 +37,13 @@ const STATUS_COLORS: Record<string, string> = {
 export default function DomainsPage() {
   const qc = useQueryClient();
   const userId = useAuthStore(s => s.user?.id);
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const [deleteTarget, setDeleteTarget] = useState<Domain | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [newDomain, setNewDomain] = useState('');
   const [frequency, setFrequency] = useState<DomainFrequencyKey>('daily');
   const [addError, setAddError] = useState<string | null>(null);
+  const { search, setSearch, debouncedSearch } = useDebouncedUrlSearch();
+  const { page, pageSize, cursor, apiParams, goNext, goPrevious, getMeta } = useUrlPagination(10);
 
   function resetAddForm() {
     setNewDomain('');
@@ -52,20 +51,13 @@ export default function DomainsPage() {
     setAddError(null);
   }
 
-  const search = searchParams.get('q') ?? '';
-  const setSearch = (val: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (val) params.set('q', val);
-    else params.delete('q');
-    params.delete('page');
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
-
-  const debouncedSearch = useDebounce(search, 300);
-
   const domainsQuery = useQuery({
-    queryKey: ['domains', userId, { q: debouncedSearch }],
-    queryFn: () => domainService.listDomains({ q: debouncedSearch || undefined }),
+    queryKey: ['domains', userId, { q: debouncedSearch, page, cursor, pageSize }],
+    queryFn: () =>
+      domainService.listDomains({
+        q: debouncedSearch || undefined,
+        ...apiParams,
+      }),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
     enabled: !!userId,
@@ -88,20 +80,15 @@ export default function DomainsPage() {
     },
     onError: (err: unknown) => {
       const apiErr = parseApiError(err);
-      if (apiErr.code === ERROR_CODES.CONFLICT) {
-        setAddError('This domain is already being monitored.');
-      } else if (apiErr.code === ERROR_CODES.VALIDATION_ERROR || apiErr.code === ERROR_CODES.INVALID_INPUT) {
-        setAddError(apiErr.message);
-      } else {
-        toast.error('Failed to add domain');
-      }
+      setAddError(apiErr.message);
     },
   });
 
   function handleAddDomain() {
     setAddError(null);
+    const normalizedDomain = extractDomain(newDomain.trim()) || newDomain.trim();
     const parsed = AddDomainSchema.safeParse({
-      domain: newDomain.trim(),
+      domain: normalizedDomain,
       frequency,
       notify_email: true,
       slack_webhook_url: null,
@@ -118,15 +105,16 @@ export default function DomainsPage() {
     retry: false,
     onMutate: async id => {
       await qc.cancelQueries({ queryKey: ['domains', userId] });
-      const previous = qc.getQueryData(['domains', userId, { q: debouncedSearch }]);
+      const queryKey = ['domains', userId, { q: debouncedSearch, page, cursor, pageSize }];
+      const previous = qc.getQueryData(queryKey);
       qc.setQueryData(
-        ['domains', userId, { q: debouncedSearch }],
+        queryKey,
         (old: { results?: Domain[]; count?: number } | undefined) => ({
           ...old,
           results: old?.results?.filter((d: Domain) => d.id !== id) ?? [],
         })
       );
-      return { previous };
+      return { previous, queryKey };
     },
     onSuccess: (_data) => {
       toast.dismiss();
@@ -134,12 +122,15 @@ export default function DomainsPage() {
       void qc.invalidateQueries({ queryKey: ['domains', userId] });
     },
     onError: (_err, _id, ctx) => {
-      qc.setQueryData(['domains', userId, { q: debouncedSearch }], ctx?.previous);
+      if (ctx?.queryKey) {
+        qc.setQueryData(ctx.queryKey, ctx.previous);
+      }
       toast.error('Failed to remove domain');
     },
   });
 
   const domains = useMemo(() => domainsQuery.data?.results ?? [], [domainsQuery.data]);
+  const paginationMeta = getMeta(domainsQuery.data);
 
   return (
     <div className="space-y-5">
@@ -244,10 +235,11 @@ export default function DomainsPage() {
               ))}
             </TableBody>
           </Table>
-          <div className="px-4 py-3 border-t border-border text-xs text-text-secondary">
-            {domainsQuery.data?.count ?? domains.length} domain
-            {(domainsQuery.data?.count ?? domains.length) !== 1 ? 's' : ''} monitored
-          </div>
+          <Pagination
+            meta={paginationMeta}
+            onNext={() => goNext(domainsQuery.data?.next)}
+            onPrevious={() => goPrevious(domainsQuery.data?.previous)}
+          />
         </div>
       )}
 
@@ -259,6 +251,7 @@ export default function DomainsPage() {
             placeholder="www.example.com"
             value={newDomain}
             onChange={e => { setNewDomain(e.target.value); setAddError(null); }}
+            error={addError ?? undefined}
             aria-label="Domain to monitor"
             mono
           />
@@ -282,9 +275,6 @@ export default function DomainsPage() {
               ))}
             </select>
           </div>
-          {addError && (
-            <p className="text-sm text-red-600" role="alert">{addError}</p>
-          )}
           <div className="flex gap-3 justify-end">
             <Button variant="ghost" size="md" onClick={() => { setAddOpen(false); resetAddForm(); }}>
               Cancel

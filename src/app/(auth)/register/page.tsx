@@ -6,12 +6,15 @@ import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { Shield, MailCheck, CheckCircle, Globe, Bell, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/Button';
 import { authService } from '@/services/authService';
-import { RegisterSchema } from '@/lib/schemas/auth';
+import { RegisterFormSchema } from '@/lib/schemas/auth';
 import toast from 'react-hot-toast';
 
-type FieldErrors = Partial<Record<'name' | 'email' | 'password' | 'org_name', string>>;
+type FieldErrors = Partial<
+  Record<'name' | 'email' | 'password' | 'confirm_password' | 'org_name', string>
+>;
 
 const features = [
   { icon: CheckCircle, label: 'Free website security scans' },
@@ -99,6 +102,7 @@ export default function RegisterPage() {
     name: '',
     email: '',
     password: '',
+    confirm_password: '',
     org_name: '',
   });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -115,7 +119,7 @@ export default function RegisterPage() {
     if (submitCooldownRef.current) return;
     setErrors({});
 
-    const result = RegisterSchema.safeParse(form);
+    const result = RegisterFormSchema.safeParse(form);
     if (!result.success) {
       const fieldErrors: FieldErrors = {};
       result.error.errors.forEach(err => {
@@ -127,12 +131,14 @@ export default function RegisterPage() {
       return;
     }
 
+    const { confirm_password: _confirmPassword, ...registerData } = result.data;
+
     submitCooldownRef.current = true;
     setTimeout(() => { submitCooldownRef.current = false; }, 2000);
     setLoading(true);
     try {
-      await authService.register(result.data);
-      setRegisteredEmail(result.data.email);
+      await authService.register(registerData);
+      setRegisteredEmail(registerData.email);
       setRegistered(true);
     } catch (err: unknown) {
       const apiErr = err as { response?: { data?: { error?: { message?: string } } } };
@@ -215,14 +221,21 @@ export default function RegisterPage() {
             autoComplete="email"
             required
           />
-          <Input
-            label="Password"
-            type="password"
+          <PasswordInput
+            label="Create password"
             value={form.password}
             onChange={e => setField('password', e.target.value)}
             error={errors.password}
             autoComplete="new-password"
             helperText="Minimum 8 characters"
+            required
+          />
+          <PasswordInput
+            label="Confirm password"
+            value={form.confirm_password}
+            onChange={e => setField('confirm_password', e.target.value)}
+            error={errors.confirm_password}
+            autoComplete="new-password"
             required
           />
           <Input

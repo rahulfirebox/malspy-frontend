@@ -37,13 +37,30 @@ export interface Plan {
 }
 
 
+export type BillingPeriod = 'monthly' | 'yearly';
+
 export interface CashfreeOrder {
   order_id: string;
+  subscription_id: string;
   payment_session_id: string;
+  subscription_session_id: string;
   amount: string;
   currency: string;
   plan_slug: string;
   plan_name: string;
+  billing_period: BillingPeriod;
+  auto_renew: boolean;
+  dev_mode?: boolean;
+  invoice_url?: string;
+  subscription_checkout_url?: string;
+  cashfree_direct_checkout_url?: string;
+  cashfree_environment?: 'SANDBOX' | 'PRODUCTION' | string;
+  return_url?: string;
+  notify_url?: string;
+  cf_subscription_id?: string;
+  frontend_url?: string;
+  backend_checkout_url?: string;
+  subscription_status?: string;
 }
 
 

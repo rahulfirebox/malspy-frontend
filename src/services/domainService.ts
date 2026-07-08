@@ -8,6 +8,7 @@ export const domainService = {
   async listDomains(params?: {
     q?: string;
     status?: string;
+    page?: number;
     cursor?: string;
     page_size?: number;
   }): Promise<PaginatedResponse<Domain>> {

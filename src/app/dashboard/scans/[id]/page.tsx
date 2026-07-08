@@ -146,6 +146,7 @@ export default function ScanDetailPage() {
     <div className="flex items-center gap-2 flex-wrap">
       <Button
         variant="outline"
+        className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
         size="sm"
         onClick={() => rescanMutation.mutate()}
         loading={rescanMutation.isPending}
@@ -156,6 +157,7 @@ export default function ScanDetailPage() {
       <Button
         variant="outline"
         size="sm"
+        className="border-green-400 text-green-400 hover:bg-green-400 hover:text-white"
         onClick={() => void handlePdfDownload()}
         loading={pdfLoading}
         aria-label="Download PDF report"

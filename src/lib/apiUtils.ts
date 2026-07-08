@@ -24,16 +24,74 @@ function readScanIdFromErrorBody(errorBody: unknown): string | undefined {
   return undefined;
 }
 
+function readFirstString(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nested = readFirstString(item);
+      if (nested) return nested;
+    }
+  }
+
+  return undefined;
+}
+
+function extractErrorMessage(data: unknown): string | undefined {
+  if (!isRecord(data)) return undefined;
+
+  const topLevelMessage = readFirstString(data.message);
+  if (topLevelMessage) return topLevelMessage;
+
+  const detail = readFirstString(data.detail);
+  if (detail) return detail;
+
+  if (isRecord(data.error)) {
+    const nestedMessage =
+      readFirstString(data.error.message) ??
+      readFirstString(data.error.detail) ??
+      readFirstString(data.error.error);
+    if (nestedMessage) return nestedMessage;
+
+    if (isRecord(data.error.details)) {
+      for (const value of Object.values(data.error.details)) {
+        const fieldMessage = readFirstString(value);
+        if (fieldMessage) return fieldMessage;
+      }
+    }
+
+    for (const [key, value] of Object.entries(data.error)) {
+      if (['code', 'error_code', 'details', 'message', 'detail'].includes(key)) continue;
+      const fieldMessage = readFirstString(value);
+      if (fieldMessage) return fieldMessage;
+    }
+  }
+
+  const errorString = readFirstString(data.error);
+  if (errorString) return errorString;
+
+  for (const [key, value] of Object.entries(data)) {
+    if (['statusCode', 'success', 'data', 'error'].includes(key)) continue;
+    const fieldMessage = readFirstString(value);
+    if (fieldMessage) return fieldMessage;
+  }
+
+  return undefined;
+}
+
 export function parseApiError(error: unknown): ParsedApiError {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as { error?: Record<string, unknown> } | undefined;
-    const errBody = data?.error;
+    const data = error.response?.data;
+    const errBody = isRecord(data) && isRecord(data.error) ? data.error : undefined;
     const code =
       (typeof errBody?.code === 'string' && errBody.code) ||
       (typeof errBody?.error_code === 'string' && errBody.error_code) ||
+      (isRecord(data) && typeof data.code === 'string' && data.code) ||
       'UNKNOWN_ERROR';
     const message =
-      (typeof errBody?.message === 'string' && errBody.message) ||
+      extractErrorMessage(data) ||
       'An unexpected error occurred. Please try again.';
     const scanId = readScanIdFromErrorBody(errBody);
     return { code, message, scanId };

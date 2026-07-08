@@ -18,9 +18,8 @@ import { Modal } from '@/components/ui/Modal';
 import { NewScanModal } from '@/components/scan/NewScanModal';
 import { scanService } from '@/services/scanService';
 import { useAuthStore } from '@/stores/authStore';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDebouncedUrlSearch } from '@/hooks/useDebouncedUrlSearch';
 import { useUrlPagination } from '@/hooks/useUrlPagination';
-import { applyPageToSearchParams } from '@/lib/pagination';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatDateShort } from '@/lib/apiUtils';
 import toast from 'react-hot-toast';
@@ -71,17 +70,7 @@ export default function ScansPage() {
     }
   }
 
-  const search = searchParams.get('q') ?? '';
-  const setSearch = (val: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (val) params.set('q', val);
-    else params.delete('q');
-    const nextParams = applyPageToSearchParams(params, 1);
-    const qs = nextParams.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
-
-  const debouncedSearch = useDebounce(search, 300);
+  const { search, setSearch, debouncedSearch } = useDebouncedUrlSearch();
 
   const scansQuery = useQuery({
     queryKey: ['scans', userId, { q: debouncedSearch, page, cursor, pageSize }],

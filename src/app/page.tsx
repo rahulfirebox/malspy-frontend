@@ -12,7 +12,7 @@ import {
   Users,
 } from 'lucide-react';
 import { ScanInput } from '@/components/scan/ScanInput';
-import { formatCurrency } from '@/lib/apiUtils';
+import { PricingSection } from '@/components/landing/PricingSection';
 
 const navLinks = [
   { href: '#features', label: 'Features' },
@@ -23,16 +23,18 @@ const navLinks = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-bg-page text-text-primary landing-grid-bg">
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-bg-page/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Shield className="h-7 w-7 text-primary" aria-hidden="true" />
-            <span className="font-bold text-lg text-text-primary">SecureScan</span>
+    <div className="min-h-screen bg-bg-page text-text-primary">
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-bg-page/70 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 h-16 relative flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/40 bg-primary/10">
+              <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
+            </span>
+            <span className="font-bold text-lg text-text-primary tracking-tight">SecureScan</span>
           </Link>
 
           <nav
-            className="hidden md:flex items-center gap-8"
+            className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-8"
             aria-label="Main navigation"
           >
             {navLinks.map(link => (
@@ -49,7 +51,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/login"
-              className="text-sm font-medium text-text-secondary hover:text-text-primary border border-border-dark px-4 py-2 rounded-lg transition-colors hidden sm:inline-flex"
+              className="text-sm font-medium text-text-primary border border-white/20 bg-transparent hover:bg-white/5 px-4 py-2 rounded-lg transition-colors hidden sm:inline-flex"
             >
               Sign In
             </Link>
@@ -63,32 +65,27 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <section className="relative overflow-hidden min-h-[520px] lg:min-h-[620px]">
+      <section className="relative overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-[center_45%] bg-no-repeat"
           style={{ backgroundImage: "url('/image/hero-background.png')" }}
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-bg-page via-bg-page/92 to-bg-page/55 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-bg-page/20 via-transparent to-bg-page pointer-events-none" />
+        <div className="absolute inset-0 bg-bg-page/45 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-bg-page/30 via-transparent to-bg-page pointer-events-none" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-16 lg:py-24">
-          <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-accent-green/30 bg-accent-green/10 px-3 py-1 text-xs font-semibold text-accent-green mb-6">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent-green" aria-hidden="true" />
-              100% Free
-            </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold leading-tight tracking-tight text-text-primary mb-5">
-              Free Website
-              <br />
-              <span className="text-primary">Security Scanner</span>
-            </h1>
-            <p className="text-lg text-text-secondary mb-8 max-w-lg leading-relaxed">
-              Check for malware, blacklist status, and security vulnerabilities — instantly,
-              for free.
-            </p>
-            <ScanInput variant="dark" />
-          </div>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 py-14 sm:py-16 lg:py-20 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-accent-green/35 bg-accent-green/10 px-4 py-1.5 text-xs font-semibold text-accent-green mb-6">
+            <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+            100% Free • No Credit Card Required
+          </span>
+          <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold leading-tight tracking-tight text-text-primary mb-5">
+            Free Website Security Scanner
+          </h1>
+          <p className="text-base sm:text-lg text-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
+            Check for malware, blacklist status, and security vulnerabilities instantly, for free.
+          </p>
+          <ScanInput variant="dark" />
         </div>
       </section>
 
@@ -206,100 +203,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="py-20 px-4">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-text-primary mb-3">Simple Pricing</h2>
-          <p className="text-center text-text-secondary mb-12">Start free, upgrade when you need more.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="glass-card rounded-xl p-6">
-              <h3 className="text-xl font-bold text-text-primary">Free</h3>
-              <p className="text-3xl font-bold text-text-primary mt-2">
-                {formatCurrency(0)}
-                <span className="text-base font-normal text-text-secondary">/mo</span>
-              </p>
-              <ul className="mt-5 space-y-2 text-sm text-text-secondary">
-                {['5 scans/month', '1 domain', 'Basic security report', 'Blacklist check', 'SSL analysis'].map(
-                  f => (
-                    <li key={f} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />
-                      {f}
-                    </li>
-                  )
-                )}
-              </ul>
-              <Link
-                href="/register"
-                className="mt-6 block w-full text-center py-2.5 border border-primary text-primary font-semibold rounded-lg hover:bg-primary/10 transition-colors text-sm"
-              >
-                Get Started Free
-              </Link>
-            </div>
-
-            <div className="glass-card rounded-xl p-6 border-primary/50 ring-1 ring-primary/40 relative shadow-glow">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
-                Most Popular
-              </span>
-              <h3 className="text-xl font-bold text-text-primary">Pro</h3>
-              <p className="text-3xl font-bold text-text-primary mt-2">
-                {formatCurrency(19.99)}
-                <span className="text-base font-normal text-text-secondary">/mo</span>
-              </p>
-              <ul className="mt-5 space-y-2 text-sm text-text-secondary">
-                {[
-                  '100 scans/month',
-                  '10 domains',
-                  'Continuous monitoring',
-                  'PDF reports',
-                  'Browser scan (Layer 2)',
-                  'Slack notifications',
-                  'Scheduled scans',
-                ].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/register"
-                className="mt-6 block w-full text-center py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors text-sm shadow-glow"
-              >
-                Start Pro Trial
-              </Link>
-            </div>
-
-            <div className="glass-card rounded-xl p-6">
-              <h3 className="text-xl font-bold text-text-primary">Enterprise</h3>
-              <p className="text-3xl font-bold text-text-primary mt-2">
-                {formatCurrency(99)}
-                <span className="text-base font-normal text-text-secondary">/mo</span>
-              </p>
-              <ul className="mt-5 space-y-2 text-sm text-text-secondary">
-                {[
-                  'Unlimited scans',
-                  'Unlimited domains',
-                  'API access',
-                  'WAF protection',
-                  'Database scan',
-                  'Priority support',
-                  'Custom integrations',
-                ].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="mailto:sales@securescan.io"
-                className="mt-6 block w-full text-center py-2.5 border border-border-dark text-text-secondary font-semibold rounded-lg hover:bg-bg-elevated transition-colors text-sm"
-              >
-                Contact Sales
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       <footer id="about" className="border-t border-border/60 py-10 px-4 bg-bg-elevated/30">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">

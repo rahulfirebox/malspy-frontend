@@ -6,13 +6,23 @@ export const LoginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof LoginSchema>;
 
-export const RegisterSchema = z.object({
+const RegisterFieldsSchema = z.object({
   name: z.string().min(1, 'Name required').max(200),
   email: z.string().trim().toLowerCase().email('Valid email required'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   org_name: z.string().max(200).optional(),
 });
+
+export const RegisterSchema = RegisterFieldsSchema;
 export type RegisterInput = z.infer<typeof RegisterSchema>;
+
+export const RegisterFormSchema = RegisterFieldsSchema.extend({
+  confirm_password: z.string().min(1, 'Confirm password required'),
+}).refine(data => data.password === data.confirm_password, {
+  message: 'Passwords do not match',
+  path: ['confirm_password'],
+});
+export type RegisterFormInput = z.infer<typeof RegisterFormSchema>;
 
 export const ForgotPasswordSchema = z.object({
   email: z.string().trim().toLowerCase().email('Valid email required'),

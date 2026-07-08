@@ -111,11 +111,11 @@ export default function AlertsPage() {
         </div>
       </div>
 
-      {alertsQuery.isFetching && !alertsQuery.isLoading && (
+      {/* {alertsQuery.isFetching && !alertsQuery.isLoading && (
         <div className="flex justify-end">
           <span className="text-xs text-text-secondary">Refreshing…</span>
         </div>
-      )}
+      )} */}
 
       {alertsQuery.isPending ? (
         <SkeletonTable rows={5} />

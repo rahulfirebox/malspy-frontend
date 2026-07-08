@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Shield, Bug, Globe, Lock, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/Button';
 import { authService } from '@/services/authService';
 import { useAuthStore } from '@/stores/authStore';
@@ -137,9 +138,8 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
               />
-              <Input
+              <PasswordInput
                 label="Password"
-                type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 error={errors.password}
