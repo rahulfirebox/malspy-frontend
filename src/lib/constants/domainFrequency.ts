@@ -14,3 +14,8 @@ export const DOMAIN_FREQUENCY_KEYS = DOMAIN_FREQUENCY_OPTIONS.map(o => o.key) as
 export function getFrequencyLabel(key: string): string {
   return DOMAIN_FREQUENCY_OPTIONS.find(o => o.key === key)?.label ?? key;
 }
+
+export const DOMAIN_FREQUENCY_SELECT_OPTIONS = DOMAIN_FREQUENCY_OPTIONS.map(opt => ({
+  value: opt.key,
+  label: opt.label,
+}));

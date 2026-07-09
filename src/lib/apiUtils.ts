@@ -39,6 +39,17 @@ function readFirstString(value: unknown): string | undefined {
   return undefined;
 }
 
+function extractFieldErrors(errors: unknown): string | undefined {
+  if (!isRecord(errors)) return undefined;
+
+  for (const value of Object.values(errors)) {
+    const fieldMessage = readFirstString(value);
+    if (fieldMessage) return fieldMessage;
+  }
+
+  return undefined;
+}
+
 function extractErrorMessage(data: unknown): string | undefined {
   if (!isRecord(data)) return undefined;
 
@@ -49,31 +60,31 @@ function extractErrorMessage(data: unknown): string | undefined {
   if (detail) return detail;
 
   if (isRecord(data.error)) {
+    const fieldErrors =
+      extractFieldErrors(data.error.errors) ?? extractFieldErrors(data.error.details);
+    if (fieldErrors) return fieldErrors;
+
     const nestedMessage =
       readFirstString(data.error.message) ??
       readFirstString(data.error.detail) ??
       readFirstString(data.error.error);
     if (nestedMessage) return nestedMessage;
 
-    if (isRecord(data.error.details)) {
-      for (const value of Object.values(data.error.details)) {
-        const fieldMessage = readFirstString(value);
-        if (fieldMessage) return fieldMessage;
-      }
-    }
-
     for (const [key, value] of Object.entries(data.error)) {
-      if (['code', 'error_code', 'details', 'message', 'detail'].includes(key)) continue;
+      if (['code', 'error_code', 'details', 'errors', 'message', 'detail'].includes(key)) continue;
       const fieldMessage = readFirstString(value);
       if (fieldMessage) return fieldMessage;
     }
   }
 
+  const topLevelFieldErrors = extractFieldErrors(data.errors);
+  if (topLevelFieldErrors) return topLevelFieldErrors;
+
   const errorString = readFirstString(data.error);
   if (errorString) return errorString;
 
   for (const [key, value] of Object.entries(data)) {
-    if (['statusCode', 'success', 'data', 'error'].includes(key)) continue;
+    if (['statusCode', 'success', 'data', 'error', 'errors'].includes(key)) continue;
     const fieldMessage = readFirstString(value);
     if (fieldMessage) return fieldMessage;
   }
@@ -235,4 +246,23 @@ export function extractDomain(url: string): string {
   } catch {
     return url;
   }
+}
+
+export type DomainProtocol = 'http' | 'https';
+
+export function hasUrlProtocol(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+/** Prepend protocol when the user entered a bare domain; leave full URLs unchanged. */
+export function normalizeDomainUrlInput(raw: string, protocol: DomainProtocol): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+
+  if (hasUrlProtocol(trimmed)) {
+    return trimmed;
+  }
+
+  const host = trimmed.replace(/^\/+/, '');
+  return `${protocol}://${host}`;
 }

@@ -16,6 +16,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function readQuotaLimit(data: Record<string, unknown>): number {
+  return Number(data.quota_limit ?? data.quota_total ?? 0);
+}
+
 function toDashboardStats(body: unknown): DashboardStats {
   const data = unwrapApiData<Record<string, unknown>>(body);
   if (!isRecord(data)) return EMPTY_STATS;
@@ -27,7 +31,7 @@ function toDashboardStats(body: unknown): DashboardStats {
       issues_found: Number(data.issues_found ?? 0),
       active_alerts: Number(data.active_alerts ?? 0),
       quota_used: Number(data.quota_used ?? 0),
-      quota_total: Number(data.quota_total ?? 0),
+      quota_total: readQuotaLimit(data),
     };
   }
 
@@ -42,7 +46,7 @@ function toDashboardStats(body: unknown): DashboardStats {
     issues_found: issues,
     active_alerts: Number(data.open_alerts_count ?? 0),
     quota_used: Number(data.quota_used ?? 0),
-    quota_total: Number(data.quota_limit ?? data.quota_total ?? 0),
+    quota_total: readQuotaLimit(data),
   };
 }
 

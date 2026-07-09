@@ -31,7 +31,7 @@ export function SiteDetailsTabs({ links }: SiteDetailsTabsProps) {
   return (
     <div>
       <div
-        className="flex border-b border-border mb-4"
+        className="flex overflow-x-auto border-b border-border mb-4 -mx-1 px-1"
         role="tablist"
         aria-label="Site details tabs"
       >
@@ -42,7 +42,7 @@ export function SiteDetailsTabs({ links }: SiteDetailsTabsProps) {
             aria-selected={active === tab.key}
             aria-controls={`tab-panel-${tab.key}`}
             onClick={() => setActive(tab.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+            className={`shrink-0 px-3 sm:px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
               active === tab.key
                 ? 'border-primary text-primary'
                 : 'border-transparent text-text-secondary hover:text-text-primary'

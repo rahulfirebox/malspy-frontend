@@ -16,6 +16,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useAuthStore } from '@/stores/authStore';
 import { signatureService } from '@/services/signatureService';
 import { formatDateShort } from '@/lib/apiUtils';
+import { tableRowSerial } from '@/lib/pagination';
 import toast from 'react-hot-toast';
 import type { MalwareSignature } from '@/types';
 
@@ -124,19 +125,19 @@ export default function SuperAdminPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="h-5 w-5 text-[#4F46E5]" aria-hidden="true" />
-          <h1 className="text-xl font-bold text-[#0E0E14]">Malware Signatures</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <ShieldAlert className="h-5 w-5 text-[#4F46E5] shrink-0" aria-hidden="true" />
+          <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate">Malware Signatures</h1>
         </div>
-        <Button size="md" onClick={() => setAddOpen(true)}>
+        <Button size="md" className="w-full sm:w-auto shrink-0" onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
           Add Signature
         </Button>
       </div>
 
       
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <select
           value={layerFilter}
           onChange={e => setLayerFilter(e.target.value)}
@@ -184,6 +185,7 @@ export default function SuperAdminPage() {
           <Table>
             <TableHead>
               <tr>
+                <Th scope="col" className="w-12">#</Th>
                 <Th scope="col">ID</Th>
                 <Th scope="col">Name</Th>
                 <Th scope="col">Layer</Th>
@@ -194,8 +196,11 @@ export default function SuperAdminPage() {
               </tr>
             </TableHead>
             <TableBody>
-              {signatures.map((sig: MalwareSignature) => (
+              {signatures.map((sig: MalwareSignature, index: number) => (
                 <tr key={sig.id} className="hover:bg-gray-50 transition-colors">
+                  <Td>
+                    <span className="text-xs text-[#5B5B6B]">{tableRowSerial(index)}</span>
+                  </Td>
                   <Td>
                     <span className="font-mono text-xs text-[#5B5B6B]">{sig.signature_id}</span>
                   </Td>

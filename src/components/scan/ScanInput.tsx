@@ -49,18 +49,18 @@ export function ScanInput({ variant = 'light' }: ScanInputProps) {
   }
 
   const wrapperClass = isDark
-    ? 'w-full max-w-3xl mx-auto rounded-2xl border border-border/60 bg-bg-card/55 backdrop-blur-md p-6 sm:p-8 shadow-[0_0_80px_rgba(37,99,235,0.12)]'
-    : 'bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl mx-auto';
+    ? 'w-full max-w-3xl mx-auto rounded-xl sm:rounded-2xl border border-border/60 bg-bg-card/55 backdrop-blur-md p-4 sm:p-6 md:p-8 shadow-[0_0_80px_rgba(37,99,235,0.12)]'
+    : 'bg-white rounded-xl shadow-lg p-5 sm:p-8 w-full max-w-2xl mx-auto';
 
   const labelClass = isDark
-    ? 'text-sm font-medium text-text-primary mb-5 text-center'
+    ? 'text-xs sm:text-sm font-medium text-text-primary mb-4 sm:mb-5 text-center'
     : 'text-sm font-medium text-text-secondary mb-3';
 
   const inputClass = isDark
-    ? `w-full h-[52px] border rounded-lg pl-11 pr-4 font-mono text-text-primary placeholder-text-secondary bg-bg-elevated/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus:border-primary/50 transition ${
+    ? `w-full h-12 sm:h-[52px] border rounded-lg pl-11 pr-4 font-mono text-sm sm:text-base text-text-primary placeholder-text-secondary bg-bg-elevated/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus:border-primary/50 transition ${
         error ? 'border-danger' : 'border-border-dark'
       }`
-    : `w-full h-[52px] border rounded-md px-4 font-mono text-text-primary placeholder-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus:border-transparent ${
+    : `w-full h-12 sm:h-[52px] border rounded-md px-4 font-mono text-sm sm:text-base text-text-primary placeholder-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus:border-transparent ${
         error ? 'border-danger' : 'border-border-dark'
       }`;
 
@@ -97,7 +97,7 @@ export function ScanInput({ variant = 'light' }: ScanInputProps) {
         <button
           type="submit"
           disabled={loading}
-          className={`h-[52px] px-8 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page ${
+          className={`w-full sm:w-auto h-12 sm:h-[52px] px-6 sm:px-8 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page ${
             isDark ? 'shadow-glow' : ''
           }`}
         >
@@ -134,7 +134,7 @@ export function ScanInput({ variant = 'light' }: ScanInputProps) {
         </button>
       </form>
       {isDark && (
-        <ul className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-text-secondary">
+        <ul className="mt-4 sm:mt-5 flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2 sm:gap-x-6 sm:gap-y-2 text-xs sm:text-sm text-text-secondary">
           {['No installation required', 'Instant results', 'Private & Secure'].map(item => (
             <li key={item} className="flex items-center gap-1.5">
               <CheckCircle className="h-4 w-4 text-accent-green shrink-0" aria-hidden="true" />

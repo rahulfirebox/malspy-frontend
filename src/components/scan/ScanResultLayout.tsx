@@ -62,29 +62,32 @@ export function ScanResultLayout({ scan, authActions, embedded = false }: ScanRe
   return (
     <div className={embedded ? '' : 'min-h-screen bg-bg-page'}>
       <div
-        className={`w-full border-b py-4 ${embedded ? 'px-0' : 'px-6'} ${banner.bgClass} ${banner.borderClass}`}
+        className={`w-full border-b py-3 sm:py-4 px-4 sm:px-6 ${embedded ? 'mb-4 sm:mb-6' : ''} ${banner.bgClass} ${banner.borderClass}`}
       >
-        <div className={`${embedded ? '' : 'max-w-6xl mx-auto'} flex items-center justify-between flex-wrap gap-2`}>
-          <div>
-            <p className={`text-sm font-medium ${banner.textClass}`}>
-              Results for <span className="font-mono font-bold">{scan.domain}</span>
+        <div
+          className={`${embedded ? '' : 'max-w-6xl mx-auto'} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}
+        >
+          <div className="min-w-0">
+            <p className={`text-sm font-medium ${banner.textClass} break-words`}>
+              Results for{' '}
+              <span className="font-mono font-bold break-all">{scan.domain}</span>
             </p>
             <p className={`text-xs mt-0.5 ${banner.textClass}`}>
               {banner.label} · Scanned {scan.completed_at ? formatDate(scan.completed_at) : ''}
             </p>
           </div>
-          {authActions}
+          {authActions && <div className="w-full sm:w-auto shrink-0">{authActions}</div>}
         </div>
       </div>
 
-      <div className={`${embedded ? '' : 'max-w-6xl mx-auto px-4 py-8'}`}>
+      <div className={`${embedded ? '' : 'max-w-6xl mx-auto px-0 sm:px-4 py-4 sm:py-8'}`}>
         <div
           className={`grid grid-cols-1 ${showPromoSidebar ? 'lg:grid-cols-[1fr_320px]' : ''} gap-6`}
         >
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-semibold text-text-primary flex items-center gap-2">
                   <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
                   Security Rating
                 </h2>
@@ -118,19 +121,14 @@ export function ScanResultLayout({ scan, authActions, embedded = false }: ScanRe
               <MalwareFindingsList findings={malwareFindings} />
             </Card>
 
-            <WebsiteInfoCard
-              domain={scan.domain}
-              site={scan.site}
-              software={scan.software}
-              whois={scan.whois}
-            />
+            <WebsiteInfoCard domain={scan.domain} site={scan.site} />
 
             {scan.tls_direct && <SslTlsCard tls={scan.tls_direct} />}
 
             {recs.length > 0 && (
               <Card>
                 <CardHeader>
-                  <h2 className="text-lg font-semibold text-text-primary">
+                  <h2 className="text-base sm:text-lg font-semibold text-text-primary">
                     Recommendations ({recs.length})
                   </h2>
                 </CardHeader>
@@ -150,20 +148,20 @@ export function ScanResultLayout({ scan, authActions, embedded = false }: ScanRe
 
             <Card>
               <CardHeader>
-                <h2 className="text-lg font-semibold text-text-primary">Site Details</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-text-primary">Site Details</h2>
               </CardHeader>
               {scan.links && <SiteDetailsTabs links={scan.links} />}
             </Card>
 
             <Card>
               <CardHeader>
-                <h2 className="text-lg font-semibold text-text-primary">Blacklist Status</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-text-primary">Blacklist Status</h2>
               </CardHeader>
               {scan.blacklists && <BlacklistProviders blacklists={scan.blacklists} />}
               {scan.our_scanner && (
                 <div className="mt-4 p-3 bg-info-bg border border-blue-200 rounded-lg">
                   <p className="text-sm font-medium text-blue-800 mb-1">Our Scanner Result</p>
-                  <div className="flex gap-4 text-xs text-text-primary">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-primary">
                     <span>
                       Layer 1:{' '}
                       {scan.our_scanner.layer1_detected ? (

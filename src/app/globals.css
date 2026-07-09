@@ -68,3 +68,51 @@ body {
 .animate-scale-in {
   animation: scale-in 0.3s ease-out;
 }
+
+select.themed-select option {
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+select.themed-select option:hover,
+select.themed-select option:focus,
+select.themed-select option:checked {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.select-menu-option {
+  color: var(--color-text-primary);
+}
+
+.select-menu-option:hover,
+.select-menu-option:focus {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.select-menu-option.is-selected {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.select-menu-option.is-selected:hover,
+.select-menu-option.is-selected:focus {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+input.date-input-white {
+  color-scheme: dark;
+}
+
+input.date-input-white::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  width: 2.5rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}

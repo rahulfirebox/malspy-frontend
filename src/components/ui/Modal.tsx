@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -10,6 +11,12 @@ interface ModalProps {
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
+
+const BACKDROP_CLASS =
+  'fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm';
+
+const PANEL_CLASS =
+  'relative z-10 w-full rounded-xl border border-border bg-bg-card shadow-2xl shadow-black/50 outline-none';
 
 const FOCUSABLE_SELECTORS = [
   'a[href]',
@@ -96,6 +103,12 @@ function FocusTrap({ active, onEscape, children, className }: FocusTrapProps) {
 }
 
 export function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
 
@@ -107,7 +120,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const sizeClasses = {
     sm: 'max-w-sm',
@@ -118,9 +131,9 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
 
   const isScrollable = size === 'xl';
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      className={BACKDROP_CLASS}
       onClick={e => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -131,22 +144,25 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
       <FocusTrap
         active={open}
         onEscape={onClose}
-        className={`bg-bg-card rounded-xl shadow-lg w-full ${sizeClasses[size]} outline-none`}
+        className={`${PANEL_CLASS} ${sizeClasses[size]}`}
       >
-        <div className="flex items-center justify-between p-6 border-b border-border shrink-0">
+        <div className="flex shrink-0 items-center justify-between border-b border-border p-4 sm:p-6">
           <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-bg-page text-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="rounded p-1 text-text-secondary hover:bg-bg-page focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             aria-label="Close modal"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className={`p-6 ${isScrollable ? 'overflow-y-auto flex-1 min-h-0' : ''}`}>{children}</div>
+        <div className={`p-4 sm:p-6 ${isScrollable ? 'min-h-0 flex-1 overflow-y-auto' : ''}`}>
+          {children}
+        </div>
       </FocusTrap>
-    </div>
+    </div>,
+    document.body
   );
 }

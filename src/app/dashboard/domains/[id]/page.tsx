@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuthStore } from '@/stores/authStore';
 import { domainService } from '@/services/domainService';
 import { formatDateShort } from '@/lib/apiUtils';
+import { tableRowSerial } from '@/lib/pagination';
 import { getFrequencyLabel } from '@/lib/constants/domainFrequency';
 import toast from 'react-hot-toast';
 import type { ScanListItem } from '@/types';
@@ -89,7 +90,7 @@ export default function DomainDetailPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={() => {
             if (window.history.length > 1) {
@@ -98,17 +99,17 @@ export default function DomainDetailPage() {
               router.push('/dashboard/domains');
             }
           }}
-          className="p-1.5 rounded hover:bg-gray-50 text-[#5B5B6B] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+          className="p-1.5 rounded hover:bg-bg-page text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </button>
-        <h1 className="text-xl font-bold text-[#0E0E14]">{domain.domain}</h1>
+        <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate">{domain.domain}</h1>
       </div>
 
       
-      <div className="bg-bg-card border border-[#E0E0DA] rounded-lg shadow-md p-5">
-        <div className="flex flex-wrap gap-6">
+      <div className="bg-bg-card border border-border rounded-lg shadow-md p-4 sm:p-5">
+        <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-wrap sm:gap-6">
           <div>
             <p className="text-xs text-[#5B5B6B] mb-1">Status</p>
             <span
@@ -145,9 +146,10 @@ export default function DomainDetailPage() {
             <p className="text-xs text-[#5B5B6B] mb-1">Added</p>
             <span className="text-sm text-[#5B5B6B]">{formatDateShort(domain.created_at)}</span>
           </div>
-          <div className="ml-auto">
+          <div className="col-span-2 sm:col-span-1 sm:ml-auto w-full sm:w-auto">
             <Button
               size="md"
+              className="w-full sm:w-auto"
               loading={triggerMutation.isPending}
               onClick={() => triggerMutation.mutate()}
             >
@@ -176,6 +178,7 @@ export default function DomainDetailPage() {
             <Table>
               <TableHead>
                 <tr>
+                  <Th scope="col" className="w-12">#</Th>
                   <Th scope="col">Date</Th>
                   <Th scope="col">Status</Th>
                   <Th scope="col">Rating</Th>
@@ -185,13 +188,16 @@ export default function DomainDetailPage() {
                 </tr>
               </TableHead>
               <TableBody>
-                {domainScans.map((scan: ScanListItem) => (
+                {domainScans.map((scan: ScanListItem, index: number) => (
                   <tr
                     key={scan.id}
                     className="hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/dashboard/scans/${scan.id}`)}
                     aria-label={`View scan from ${formatDateShort(scan.created_at)}`}
                   >
+                    <Td>
+                      <span className="text-xs text-[#5B5B6B]">{tableRowSerial(index)}</span>
+                    </Td>
                     <Td>
                       <span className="text-xs text-[#5B5B6B]">
                         {formatDateShort(scan.created_at)}

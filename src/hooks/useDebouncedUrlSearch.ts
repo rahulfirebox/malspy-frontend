@@ -7,12 +7,20 @@ import { applyPageToSearchParams } from '@/lib/pagination';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 
-export function useDebouncedUrlSearch(delay: number = SEARCH_DEBOUNCE_MS) {
+interface DebouncedUrlSearchOptions {
+  paramKey?: string;
+  delay?: number;
+}
+
+export function useDebouncedUrlSearch(options?: DebouncedUrlSearchOptions) {
+  const paramKey = options?.paramKey ?? 'q';
+  const delay = options?.delay ?? SEARCH_DEBOUNCE_MS;
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  const urlSearch = searchParams.get('q') ?? '';
+  const urlSearch = searchParams.get(paramKey) ?? '';
   const [search, setSearchState] = useState(urlSearch);
   const debouncedSearch = useDebounce(search, delay);
 
@@ -27,15 +35,15 @@ export function useDebouncedUrlSearch(delay: number = SEARCH_DEBOUNCE_MS) {
 
     const params = new URLSearchParams(searchParams.toString());
     if (debouncedSearch) {
-      params.set('q', debouncedSearch);
+      params.set(paramKey, debouncedSearch);
     } else {
-      params.delete('q');
+      params.delete(paramKey);
     }
 
     const nextParams = applyPageToSearchParams(params, 1);
     const qs = nextParams.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [debouncedSearch, urlSearch, searchParams, router, pathname]);
+  }, [debouncedSearch, urlSearch, searchParams, router, pathname, paramKey]);
 
   const setSearch = useCallback((value: string) => {
     setSearchState(value);

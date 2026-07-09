@@ -4,8 +4,9 @@ export const dynamic = 'force-dynamic';
 
 import React, { useMemo } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { Shield, CheckCircle, AlertTriangle, Bug } from 'lucide-react';
+import { Shield, CheckCircle, AlertTriangle, Bug, Coins } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { RecentScansTable } from '@/components/dashboard/RecentScansTable';
 import { DomainCard } from '@/components/dashboard/DomainCard';
 import { SkeletonCard, SkeletonTable } from '@/components/ui/Skeleton';
@@ -58,6 +59,14 @@ export default function DashboardPage() {
   const recentDomains = useMemo(() => domainsQuery.data?.results ?? [], [domainsQuery.data]);
   const recentAlerts = useMemo(() => alertsQuery.data?.results ?? [], [alertsQuery.data]);
 
+  const quotaValue = useMemo(() => {
+    const stats = statsQuery.data;
+    if (!stats) return '0/0';
+
+    const { quota_used: used, quota_total: limit } = stats;
+    return `${used}/${limit}`;
+  }, [statsQuery.data]);
+
   const sevColor: Record<string, string> = {
     critical: 'var(--color-danger)',
     high: 'var(--color-warning-orange)',
@@ -67,24 +76,28 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-text-primary">Dashboard</h1>
-        <Link href="/dashboard/scans?new=1">
-          <Button size="md">+ New Scan</Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        action={
+          <Link href="/dashboard/scans?new=1" className="block w-full sm:w-auto">
+            <Button size="md" className="w-full sm:w-auto">
+              + New Scan
+            </Button>
+          </Link>
+        }
+      />
 
       
       {statsQuery.isPending ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
             <SkeletonCard key={`skel-${i}`} />
           ))}
         </div>
       ) : statsQuery.isError ? (
         <ErrorState message="Failed to load stats." onRetry={() => statsQuery.refetch()} />
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           <StatsCard
             label="Total Scans"
             value={statsQuery.data.total_scans}
@@ -108,6 +121,12 @@ export default function DashboardPage() {
             value={statsQuery.data.active_alerts}
             icon={<AlertTriangle className="h-5 w-5" />}
             accent="var(--color-danger)"
+          />
+          <StatsCard
+            value={quotaValue}
+            label="User Token"
+            icon={<Coins className="h-5 w-5" />}
+            accent="var(--color-info)"
           />
         </div>
       )}
@@ -195,7 +214,7 @@ export default function DashboardPage() {
           </Link>
         </div>
         {domainsQuery.isPending ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <SkeletonCard key={`skel-${i}`} />
             ))}
@@ -215,7 +234,7 @@ export default function DashboardPage() {
             }
           />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {recentDomains.map(domain => (
               <DomainCard key={domain.id} domain={domain} />
             ))}

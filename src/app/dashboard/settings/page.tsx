@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { authService } from '@/services/authService';
@@ -54,7 +55,7 @@ export default function SettingsPage() {
   if (!profile && meQuery.isLoading) {
     return (
       <div className="space-y-6 max-w-xl">
-        <h1 className="text-xl font-bold text-text-primary">Settings</h1>
+        <PageHeader title="Settings" />
         <div className="h-48 bg-bg-elevated rounded-lg motion-safe:animate-pulse" />
       </div>
     );
@@ -63,7 +64,7 @@ export default function SettingsPage() {
   if (meQuery.isError && !profile) {
     return (
       <div className="space-y-6 max-w-xl">
-        <h1 className="text-xl font-bold text-text-primary">Settings</h1>
+        <PageHeader title="Settings" />
         <p className="text-sm text-[#dc2626]" role="alert">
           Failed to load settings.{' '}
           <button
@@ -79,7 +80,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-xl">
-      <h1 className="text-xl font-bold text-text-primary">Settings</h1>
+      <PageHeader title="Settings" />
 
       {meQuery.isError && profile && (
         <p className="text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2" role="status">

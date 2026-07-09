@@ -8,6 +8,7 @@ export const domainService = {
   async listDomains(params?: {
     q?: string;
     status?: string;
+    schedule?: string;
     page?: number;
     cursor?: string;
     page_size?: number;
@@ -43,7 +44,22 @@ export const domainService = {
     return parsePaginatedResponse<ScanListItem>(res);
   },
 
-  async triggerScan(id: string): Promise<void> {
-    await apiClient.post(API.domains.scan(id), {});
+  async triggerScan(id: string): Promise<{ id: string; status?: string; domain?: string }> {
+    const res = await apiClient.post(API.domains.scan(id), {});
+    const data = unwrapApiData<Record<string, unknown>>(res.data);
+    const scanId =
+      (typeof data.id === 'string' && data.id) ||
+      (typeof data.scan_id === 'string' && data.scan_id) ||
+      null;
+
+    if (!scanId) {
+      throw new Error('Invalid scan response: missing scan id');
+    }
+
+    return {
+      id: scanId,
+      status: typeof data.status === 'string' ? data.status : undefined,
+      domain: typeof data.domain === 'string' ? data.domain : undefined,
+    };
   },
 };

@@ -4,6 +4,7 @@ import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { tokenRefreshMutex } from '@/lib/tokenRefreshMutex';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import { expireSession } from '@/lib/authSession';
 import { normalizeAuthTokens } from '@/lib/apiUtils';
 import { randomUUID } from '@/lib/uuid';
 
@@ -107,12 +108,22 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    if (originalRequest._retry) {
+      expireSession();
       return Promise.reject(error);
     }
 
     const requestUrl = originalRequest.url ?? '';
-    if (requestUrl.includes('/auth/refresh/') || requestUrl.includes('/auth/login/')) {
+    if (requestUrl.includes('/auth/login/')) {
+      return Promise.reject(error);
+    }
+
+    if (requestUrl.includes('/auth/refresh/')) {
+      expireSession();
       return Promise.reject(error);
     }
 
@@ -152,9 +163,7 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest);
     } catch {
       tokenRefreshMutex.reject();
-      if (!useAuthStore.getState().isInitializing) {
-        useAuthStore.getState().clearAuth();
-      }
+      expireSession();
       return Promise.reject(error);
     }
   }

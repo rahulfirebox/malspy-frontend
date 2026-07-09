@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApiKeys, useCreateApiKey, useRevokeApiKey } from '@/hooks/useApiKeys';
 import { Button } from '@/components/ui/Button';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Input } from '@/components/ui/Input';
 import { Table, TableHead, TableBody, Th, Td } from '@/components/ui/Table';
 import { SkeletonTable } from '@/components/ui/Skeleton';
@@ -15,6 +16,7 @@ import { PlanGate } from '@/components/ui/PlanGate';
 import { Key, Trash2, Plus, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatDateShort, parseApiError } from '@/lib/apiUtils';
+import { tableRowSerial } from '@/lib/pagination';
 import { ERROR_CODES } from '@/lib/constants/errorCodes';
 import type { ApiKey } from '@/types';
 
@@ -69,13 +71,15 @@ export default function ApiKeysPage() {
   return (
     <PlanGate plan="enterprise">
       <div className="space-y-5">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-[#0E0E14]">API Keys</h1>
-          <Button size="md" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
-            Create Key
-          </Button>
-        </div>
+        <PageHeader
+          title="API Keys"
+          action={
+            <Button size="md" className="w-full sm:w-auto" onClick={() => setAddOpen(true)}>
+              <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+              Create Key
+            </Button>
+          }
+        />
 
         {isPending ? (
           <SkeletonTable rows={4} />
@@ -97,6 +101,7 @@ export default function ApiKeysPage() {
             <Table>
               <TableHead>
                 <tr>
+                  <Th scope="col" className="w-12">#</Th>
                   <Th scope="col">Name</Th>
                   <Th scope="col">Key Prefix</Th>
                   <Th scope="col">Created</Th>
@@ -106,8 +111,11 @@ export default function ApiKeysPage() {
                 </tr>
               </TableHead>
               <TableBody>
-                {apiKeys.map(key => (
+                {apiKeys.map((key, index) => (
                   <tr key={key.id} className="hover:bg-gray-50 transition-colors">
+                    <Td>
+                      <span className="text-xs text-[#5B5B6B]">{tableRowSerial(index)}</span>
+                    </Td>
                     <Td>
                       <span className="font-medium text-[#0E0E14]">{key.name}</span>
                     </Td>

@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { TopBar } from '@/components/dashboard/TopBar';
@@ -44,13 +44,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => window.removeEventListener('storage', handleStorage);
   }, [logout]);
 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const closeMobileSidebar = useCallback(() => setMobileSidebarOpen(false), []);
+
   if (!hydrated || isInitializing || !isAuthenticated) return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-page">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <TopBar />
+      <Sidebar mobileOpen={mobileSidebarOpen} onMobileClose={closeMobileSidebar} />
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <TopBar onMenuClick={() => setMobileSidebarOpen(true)} />
         {!isHealthy && (
           <div
             role="alert"
@@ -59,7 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             Service is temporarily unavailable. Some features may not work.
           </div>
         )}
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import type {
   RegisterInput,
   ForgotPasswordInput,
   ResetPasswordInput,
+  ContactRequestInput,
 } from '@/lib/schemas/auth';
 import type { LoginResponse, RegisterResponse, User } from '@/types';
 
@@ -41,6 +42,15 @@ export const authService = {
 
   async verifyEmail(token: string): Promise<void> {
     await apiClient.post(API.auth.verifyEmail, { token });
+  },
+
+  async submitContactRequest(data: ContactRequestInput): Promise<void> {
+    await apiClient.post(API.auth.contactRequests, {
+      name: data.name,
+      phone: data.phone?.trim() ?? '',
+      email: data.email,
+      message: data.message,
+    });
   },
 
   async refresh(refreshToken: string): Promise<{ access: string; refresh?: string }> {

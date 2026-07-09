@@ -5,8 +5,9 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, XCircle, Crown, Sparkles, CalendarDays } from 'lucide-react';
+import { CheckCircle, XCircle, Crown, Sparkles, CalendarDays, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Modal } from '@/components/ui/Modal';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -16,6 +17,7 @@ import { billingService, PENDING_CHECKOUT_ORDER_KEY, type BillingInfo } from '@/
 import { PLAN_FEATURES } from '@/lib/planFeatures';
 import { useAuthStore } from '@/stores/authStore';
 import { useUrlPagination } from '@/hooks/useUrlPagination';
+import { tableRowSerial } from '@/lib/pagination';
 import { formatDateShort, parseApiError } from '@/lib/apiUtils';
 import toast from 'react-hot-toast';
 import type { PlanSlug } from '@/types';
@@ -124,6 +126,7 @@ export default function BillingPage() {
   const userId = useAuthStore(s => s.user?.id);
   const [planError, setPlanError] = useState('');
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
   const { page, pageSize, cursor, apiParams, goNext, goPrevious, getMeta } = useUrlPagination(10);
 
   const subscribeMutation = useMutation({
@@ -224,16 +227,29 @@ export default function BillingPage() {
   const CurrentPlanIcon = currentPlanTheme.icon;
   const hasPaidPlan = currentPlan !== undefined && currentPlan !== 'free';
 
+  async function handleDownloadInvoice(invoiceId: string) {
+    setDownloadingInvoiceId(invoiceId);
+    try {
+      await billingService.downloadInvoice(invoiceId);
+      toast.success('Invoice downloaded');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to download invoice.';
+      toast.error(message);
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  }
+
   return (
-    <div className="space-y-8">
-      <h1 className="text-xl font-bold text-text-primary">Billing & Plan</h1>
+    <div className="space-y-6 sm:space-y-8">
+      <PageHeader title="Billing & Plan" />
       {planError && (
         <p className="text-sm text-[#dc2626]" role="alert">{planError}</p>
       )}
 
       
       {billingQuery.data && (
-        <div className={`rounded-xl border-2 p-6 ${currentPlanTheme.card}`}>
+        <div className={`rounded-xl border-2 p-4 sm:p-6 ${currentPlanTheme.card}`}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-white">
@@ -246,7 +262,7 @@ export default function BillingPage() {
                   <CurrentPlanIcon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
-                  <h2 className={`text-2xl font-bold capitalize ${currentPlanTheme.title}`}>
+                  <h2 className={`text-xl sm:text-2xl font-bold capitalize ${currentPlanTheme.title}`}>
                     {billingQuery.data.plan_name || billingQuery.data.plan || 'Free'}
                   </h2>
                   {Number(billingQuery.data.price_monthly) > 0 && (
@@ -369,7 +385,9 @@ export default function BillingPage() {
             {plans.map(plan => (
               <div
                 key={plan.slug}
-                className={`relative bg-bg-card rounded-xl border-2 p-6 ${PLAN_COLORS[plan.slug as PlanSlug]}`}
+                className={`relative bg-bg-card rounded-xl border-2 p-4 sm:p-6 ${PLAN_COLORS[plan.slug as PlanSlug]} ${
+                  plan.slug === 'pro' ? 'mt-4 sm:mt-0' : ''
+                }`}
               >
                 {plan.slug === 'pro' && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2B7DBC] text-white text-xs font-semibold px-3 py-1 rounded-full">
@@ -431,7 +449,7 @@ export default function BillingPage() {
 
       
       <div>
-        <h2 className="font-semibold text-text-primary mb-4">Invoices</h2>
+        <h2 className="mb-4 font-semibold text-text-primary">Invoices</h2>
         {invoicesQuery.isPending ? (
           <SkeletonTable rows={4} />
         ) : invoicesQuery.isError ? (
@@ -445,15 +463,22 @@ export default function BillingPage() {
             <Table>
               <TableHead>
                 <tr>
+                  <Th scope="col" className="w-12">#</Th>
                   <Th scope="col">Invoice</Th>
                   <Th scope="col">Amount</Th>
                   <Th scope="col">Status</Th>
                   <Th scope="col">Date</Th>
+                  <Th scope="col">Actions</Th>
                 </tr>
               </TableHead>
               <TableBody>
-                {invoices.map(inv => (
+                {invoices.map((inv, index) => (
                   <tr key={inv.id} className="hover:bg-bg-page transition-colors">
+                    <Td>
+                      <span className="text-xs text-text-secondary">
+                        {tableRowSerial(index, page, pageSize)}
+                      </span>
+                    </Td>
                     <Td>
                       <span className="font-mono text-sm text-text-primary">
                         {inv.id.slice(0, 8).toUpperCase()}
@@ -477,6 +502,21 @@ export default function BillingPage() {
                       <span className="text-xs text-text-secondary">
                         {formatDateShort(inv.created_at)}
                       </span>
+                    </Td>
+                    <Td>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        loading={downloadingInvoiceId === inv.id}
+                        disabled={downloadingInvoiceId !== null && downloadingInvoiceId !== inv.id}
+                        onClick={() => void handleDownloadInvoice(inv.id)}
+                        aria-label={`Download invoice ${inv.id.slice(0, 8).toUpperCase()}`}
+                      >
+                        {downloadingInvoiceId !== inv.id && (
+                          <FileDown className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        PDF
+                      </Button>
                     </Td>
                   </tr>
                 ))}

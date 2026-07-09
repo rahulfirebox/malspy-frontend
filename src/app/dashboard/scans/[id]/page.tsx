@@ -142,8 +142,8 @@ export default function ScanDetailPage() {
   }
 
   const authActions = (
-    <div className="space-y-2">
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="space-y-2 w-full sm:w-auto">
+    <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
       <Button
         variant="outline"
         className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
@@ -183,7 +183,7 @@ export default function ScanDetailPage() {
 
   return (
     <>
-      <ScanResultLayout scan={scan} authActions={authActions} />
+      <ScanResultLayout scan={scan} authActions={authActions} embedded />
       <Modal
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}

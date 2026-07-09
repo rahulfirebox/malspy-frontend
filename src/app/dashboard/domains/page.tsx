@@ -3,10 +3,13 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { Globe, Trash2, Plus } from 'lucide-react';
+import { Globe, Trash2, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Table, TableHead, TableBody, Th, Td } from '@/components/ui/Table';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -16,13 +19,20 @@ import { Modal } from '@/components/ui/Modal';
 import { domainService } from '@/services/domainService';
 import { useAuthStore } from '@/stores/authStore';
 import { useDebouncedUrlSearch } from '@/hooks/useDebouncedUrlSearch';
+import { useDomainFilters } from '@/hooks/useDomainFilters';
 import { useUrlPagination } from '@/hooks/useUrlPagination';
-import { parseApiError, extractDomain } from '@/lib/apiUtils';
+import { tableRowSerial } from '@/lib/pagination';
+import { parseApiError, normalizeDomainUrlInput, formatDateShort, type DomainProtocol } from '@/lib/apiUtils';
+import {
+  DOMAIN_SCHEDULE_FILTER_OPTIONS,
+  DOMAIN_STATUS_FILTER_OPTIONS,
+} from '@/lib/constants/domainFilters';
+import { PROTOCOL_SELECT_OPTIONS } from '@/lib/constants/scanFilters';
 import toast from 'react-hot-toast';
 import type { Domain } from '@/types';
 import { AddDomainSchema } from '@/lib/schemas/domain';
 import {
-  DOMAIN_FREQUENCY_OPTIONS,
+  DOMAIN_FREQUENCY_SELECT_OPTIONS,
   getFrequencyLabel,
   type DomainFrequencyKey,
 } from '@/lib/constants/domainFrequency';
@@ -36,26 +46,46 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function DomainsPage() {
   const qc = useQueryClient();
+  const router = useRouter();
   const userId = useAuthStore(s => s.user?.id);
   const [deleteTarget, setDeleteTarget] = useState<Domain | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [newDomain, setNewDomain] = useState('');
+  const [domainProtocol, setDomainProtocol] = useState<DomainProtocol>('https');
   const [frequency, setFrequency] = useState<DomainFrequencyKey>('daily');
   const [addError, setAddError] = useState<string | null>(null);
+  const [rescanningId, setRescanningId] = useState<string | null>(null);
   const { search, setSearch, debouncedSearch } = useDebouncedUrlSearch();
+  const {
+    schedule,
+    status,
+    setSchedule,
+    setStatus,
+    clearFilters,
+    hasSelectFilters,
+  } = useDomainFilters();
   const { page, pageSize, cursor, apiParams, goNext, goPrevious, getMeta } = useUrlPagination(10);
+
+  const hasActiveFilters = Boolean(debouncedSearch || hasSelectFilters);
 
   function resetAddForm() {
     setNewDomain('');
+    setDomainProtocol('https');
     setFrequency('daily');
     setAddError(null);
   }
 
   const domainsQuery = useQuery({
-    queryKey: ['domains', userId, { q: debouncedSearch, page, cursor, pageSize }],
+    queryKey: [
+      'domains',
+      userId,
+      { q: debouncedSearch, schedule, status, page, cursor, pageSize },
+    ],
     queryFn: () =>
       domainService.listDomains({
         q: debouncedSearch || undefined,
+        schedule: schedule || undefined,
+        status: status || undefined,
         ...apiParams,
       }),
     placeholderData: keepPreviousData,
@@ -86,9 +116,9 @@ export default function DomainsPage() {
 
   function handleAddDomain() {
     setAddError(null);
-    const normalizedDomain = extractDomain(newDomain.trim()) || newDomain.trim();
+    const domainValue = normalizeDomainUrlInput(newDomain, domainProtocol);
     const parsed = AddDomainSchema.safeParse({
-      domain: normalizedDomain,
+      domain: domainValue,
       frequency,
       notify_email: true,
       slack_webhook_url: null,
@@ -105,7 +135,11 @@ export default function DomainsPage() {
     retry: false,
     onMutate: async id => {
       await qc.cancelQueries({ queryKey: ['domains', userId] });
-      const queryKey = ['domains', userId, { q: debouncedSearch, page, cursor, pageSize }];
+      const queryKey = [
+        'domains',
+        userId,
+        { q: debouncedSearch, schedule, status, page, cursor, pageSize },
+      ];
       const previous = qc.getQueryData(queryKey);
       qc.setQueryData(
         queryKey,
@@ -129,27 +163,70 @@ export default function DomainsPage() {
     },
   });
 
+  const rescanMutation = useMutation({
+    mutationFn: (id: string) => domainService.triggerScan(id),
+    retry: false,
+    onMutate: id => {
+      setRescanningId(id);
+    },
+    onSuccess: data => {
+      toast.success('Rescan started');
+      void qc.invalidateQueries({ queryKey: ['domains', userId] });
+      router.push(`/dashboard/scans/${data.id}`);
+    },
+    onError: () => toast.error('Failed to start rescan. Please try again.'),
+    onSettled: () => setRescanningId(null),
+  });
+
   const domains = useMemo(() => domainsQuery.data?.results ?? [], [domainsQuery.data]);
   const paginationMeta = getMeta(domainsQuery.data);
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-text-primary">Monitored Domains</h1>
-        <Button size="md" onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
-          Add Domain
-        </Button>
-      </div>
+      <PageHeader
+        title="Monitored Domains"
+        action={
+          <Button size="md" className="w-full sm:w-auto" onClick={() => setAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+            Add Domain
+          </Button>
+        }
+      />
 
-      <div className="max-w-sm">
-        <Input
-          type="search"
-          placeholder="Search domains…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          aria-label="Search domains"
-        />
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="max-w-sm flex-1">
+            <Input
+              type="search"
+              placeholder="Search domains…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              aria-label="Search domains"
+            />
+          </div>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="md" className="shrink-0" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:max-w-2xl">
+          <Select
+            id="domain-schedule-filter"
+            label="Schedule"
+            value={schedule}
+            onChange={setSchedule}
+            options={DOMAIN_SCHEDULE_FILTER_OPTIONS}
+          />
+          <Select
+            id="domain-status-filter"
+            label="Status"
+            value={status}
+            onChange={setStatus}
+            options={DOMAIN_STATUS_FILTER_OPTIONS}
+          />
+        </div>
       </div>
 
       {domainsQuery.isFetching && !domainsQuery.isLoading && (
@@ -167,16 +244,20 @@ export default function DomainsPage() {
           icon={<Globe className="h-12 w-12" />}
           title="No monitored domains"
           description={
-            debouncedSearch
-              ? `No domains match "${debouncedSearch}"`
+            hasActiveFilters
+              ? 'No domains match the current filters.'
               : 'Add a domain to start continuous security monitoring.'
           }
           cta={
-            !debouncedSearch ? (
+            !hasActiveFilters ? (
               <Button size="sm" onClick={() => setAddOpen(true)}>
                 Add Domain
               </Button>
-            ) : undefined
+            ) : (
+              <Button size="sm" variant="ghost" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            )
           }
         />
       ) : (
@@ -184,16 +265,23 @@ export default function DomainsPage() {
           <Table>
             <TableHead>
               <tr>
+                <Th scope="col" className="w-12">#</Th>
                 <Th scope="col">Domain</Th>
                 <Th scope="col">Status</Th>
                 <Th scope="col">Schedule</Th>
                 <Th scope="col">Last Scan</Th>
+                <Th scope="col">Scans</Th>
                 <Th scope="col">Actions</Th>
               </tr>
             </TableHead>
             <TableBody>
-              {domains.map(domain => (
+              {domains.map((domain, index) => (
                 <tr key={domain.id} className="hover:bg-bg-page transition-colors">
+                  <Td>
+                    <span className="text-xs text-text-secondary">
+                      {tableRowSerial(index, page, pageSize)}
+                    </span>
+                  </Td>
                   <Td>
                     <span className="font-mono text-sm text-text-primary">{domain.domain}</span>
                   </Td>
@@ -217,11 +305,31 @@ export default function DomainsPage() {
                   </Td>
                   <Td>
                     <span className="text-xs text-text-secondary">
-                      {domain.last_scan_id ? '✓' : '—'}
+                      {domain.last_scan_date
+                        ? formatDateShort(domain.last_scan_date)
+                        : '—'}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span className="text-sm font-medium text-text-primary">
+                      {domain.scan_count ?? 0}
                     </span>
                   </Td>
                   <Td>
                     <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => rescanMutation.mutate(domain.id)}
+                        disabled={rescanningId === domain.id}
+                        className="p-1.5 rounded hover:bg-bg-page text-text-secondary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label={`Rescan ${domain.domain}`}
+                        title="Rescan"
+                      >
+                        <RefreshCw
+                          className={`h-4 w-4 ${rescanningId === domain.id ? 'motion-safe:animate-spin' : ''}`}
+                          aria-hidden="true"
+                        />
+                      </button>
                       <button
                         onClick={() => setDeleteTarget(domain)}
                         className="p-1.5 rounded hover:bg-danger-bg text-text-secondary hover:text-danger focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
@@ -244,37 +352,61 @@ export default function DomainsPage() {
       )}
 
       
-      <Modal open={addOpen} onClose={() => { setAddOpen(false); resetAddForm(); }} title="Add Domain" size="sm">
-        <div className="space-y-4">
-          <Input
-            label="Domain"
-            placeholder="www.example.com"
-            value={newDomain}
-            onChange={e => { setNewDomain(e.target.value); setAddError(null); }}
-            error={addError ?? undefined}
-            aria-label="Domain to monitor"
-            mono
-          />
+      <Modal open={addOpen} onClose={() => { setAddOpen(false); resetAddForm(); }} title="Add Domain" size="md">
+        <div className="space-y-5">
           <div className="flex flex-col gap-1">
-            <label htmlFor="domain-frequency" className="text-sm font-medium text-text-primary">
-              Scan frequency
+            <label htmlFor="new-domain" className="text-sm font-medium text-text-primary">
+              Domain
             </label>
-            <select
-              id="domain-frequency"
-              value={frequency}
-              onChange={e => {
-                setFrequency(e.target.value as DomainFrequencyKey);
-                setAddError(null);
-              }}
-              className="w-full border border-border-dark rounded-lg px-3 py-2 bg-bg-elevated text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page"
-            >
-              {DOMAIN_FREQUENCY_OPTIONS.map(opt => (
-                <option key={opt.key} value={opt.key}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Select
+                id="domain-protocol"
+                value={domainProtocol}
+                onChange={value => {
+                  setDomainProtocol(value as DomainProtocol);
+                  setAddError(null);
+                }}
+                options={PROTOCOL_SELECT_OPTIONS}
+                className="w-28 shrink-0"
+                triggerClassName="font-mono"
+                aria-label="Protocol"
+              />
+              <input
+                id="new-domain"
+                type="text"
+                placeholder="example.com"
+                value={newDomain}
+                onChange={e => {
+                  setNewDomain(e.target.value);
+                  setAddError(null);
+                }}
+                className={`min-w-0 flex-1 border rounded-lg px-3 py-2 bg-bg-elevated text-text-primary placeholder-text-secondary font-mono focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page shadow-sm transition ${
+                  addError ? 'border-danger' : 'border-border-dark'
+                }`}
+                aria-label="Domain to monitor"
+                aria-describedby={addError ? 'new-domain-error' : 'new-domain-help'}
+              />
+            </div>
+            {addError ? (
+              <p id="new-domain-error" className="text-sm text-danger">
+                {addError}
+              </p>
+            ) : (
+              <p id="new-domain-help" className="text-sm text-text-secondary">
+                Enter a domain or paste a full URL with http:// or https://
+              </p>
+            )}
           </div>
+          <Select
+            id="domain-frequency"
+            label="Scan frequency"
+            value={frequency}
+            onChange={value => {
+              setFrequency(value as DomainFrequencyKey);
+              setAddError(null);
+            }}
+            options={DOMAIN_FREQUENCY_SELECT_OPTIONS}
+          />
           <div className="flex gap-3 justify-end">
             <Button variant="ghost" size="md" onClick={() => { setAddOpen(false); resetAddForm(); }}>
               Cancel

@@ -1,5 +1,6 @@
 import apiClient from './apiClient';
-import { parsePaginatedResponse, unwrapApiData } from '@/lib/apiUtils';
+import axios from 'axios';
+import { parsePaginatedResponse, unwrapApiData, parseApiError } from '@/lib/apiUtils';
 import { API } from '@/lib/apiEndpoints';
 import type {
   BillingPeriod,
@@ -52,6 +53,36 @@ export interface BillingInfo {
 export type SubscribeOutcome = 'checkout_started';
 
 export const PENDING_CHECKOUT_ORDER_KEY = 'pending_checkout_order_id';
+
+function filenameFromDisposition(disposition: string | undefined, fallback: string): string {
+  if (!disposition) return fallback;
+  const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1]);
+  const match = disposition.match(/filename="?([^";\n]+)"?/i);
+  return match?.[1]?.trim() ?? fallback;
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function parseBlobError(blob: Blob, fallback: string): Promise<string> {
+  try {
+    const text = await blob.text();
+    const body = JSON.parse(text) as { error?: { message?: string }; detail?: string; message?: string };
+    return body?.error?.message ?? body?.detail ?? body?.message ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export function getSubscriptionCheckoutUrl(order: CashfreeOrder): string {
   const url =
@@ -247,5 +278,57 @@ export const billingService = {
 
   async cancelSubscription(): Promise<void> {
     await apiClient.post(API.billing.cancel, {});
+  },
+
+  async downloadAllInvoices(): Promise<void> {
+    const fallback = 'invoices.pdf';
+
+    try {
+      const res = await apiClient.get(API.billing.downloadInvoice, {
+        responseType: 'blob',
+      });
+      const contentType = String(res.headers['content-type'] ?? '');
+
+      if (contentType.includes('application/json')) {
+        throw new Error(await parseBlobError(res.data as Blob, 'Failed to download invoices.'));
+      }
+
+      const filename = filenameFromDisposition(
+        res.headers['content-disposition'] as string | undefined,
+        contentType.includes('zip') ? 'invoices.zip' : fallback
+      );
+      triggerBlobDownload(res.data as Blob, filename);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data instanceof Blob) {
+        throw new Error(await parseBlobError(err.response.data, 'Failed to download invoices.'));
+      }
+      throw new Error(parseApiError(err).message || 'Failed to download invoices.');
+    }
+  },
+
+  async downloadInvoice(id: string): Promise<void> {
+    const fallback = `invoice-${id.slice(0, 8)}.pdf`;
+
+    try {
+      const res = await apiClient.get(API.billing.downloadInvoiceById(id), {
+        responseType: 'blob',
+      });
+      const contentType = String(res.headers['content-type'] ?? '');
+
+      if (contentType.includes('application/json')) {
+        throw new Error(await parseBlobError(res.data as Blob, 'Failed to download invoice.'));
+      }
+
+      const filename = filenameFromDisposition(
+        res.headers['content-disposition'] as string | undefined,
+        fallback
+      );
+      triggerBlobDownload(res.data as Blob, filename);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data instanceof Blob) {
+        throw new Error(await parseBlobError(err.response.data, 'Failed to download invoice.'));
+      }
+      throw new Error(parseApiError(err).message || 'Failed to download invoice.');
+    }
   },
 };

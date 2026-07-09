@@ -5,6 +5,7 @@ import { Table, TableHead, TableBody, Th, Td } from '@/components/ui/Table';
 import { RatingBadgeSmall } from '@/components/scan/RatingBadge';
 import { ScanStatusChip, MalwareStatusChip } from '@/components/scan/StatusChip';
 import { formatDateShort } from '@/lib/apiUtils';
+import { tableRowSerial } from '@/lib/pagination';
 
 interface RecentScansTableProps {
   scans: ScanListItem[];
@@ -15,6 +16,7 @@ export function RecentScansTable({ scans }: RecentScansTableProps) {
     <Table>
       <TableHead>
         <tr>
+          <Th scope="col" className="w-12">#</Th>
           <Th scope="col">Rating</Th>
           <Th scope="col">Domain</Th>
           <Th scope="col">Status</Th>
@@ -24,8 +26,11 @@ export function RecentScansTable({ scans }: RecentScansTableProps) {
         </tr>
       </TableHead>
       <TableBody>
-        {scans.map(scan => (
+        {scans.map((scan, index) => (
           <tr key={scan.id} className="hover:bg-bg-page transition-colors">
+            <Td>
+              <span className="text-xs text-text-secondary">{tableRowSerial(index)}</span>
+            </Td>
             <Td>
               <RatingBadgeSmall rating={scan.rating} />
             </Td>

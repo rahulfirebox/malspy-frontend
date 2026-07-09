@@ -8,6 +8,7 @@ export const API = {
     forgotPassword: '/auth/forgot-password/',
     resetPassword: '/auth/reset-password/',
     verifyEmail: '/auth/verify-email/',
+    contactRequests: '/auth/contact-requests/',
   },
   domains: {
     list: '/domains/',
@@ -49,6 +50,8 @@ export const API = {
     upgrade: '/billing/upgrade/',
     cancel: '/billing/cancel/',
     invoices: '/billing/invoices/',
+    downloadInvoice: '/billing/download-invoice/',
+    downloadInvoiceById: (id: string) => `/billing/invoices/${id}/download/`,
     createOrder: '/billing/create-order/',
     verifyPayment: '/billing/verify-payment/',
     webhooks: {

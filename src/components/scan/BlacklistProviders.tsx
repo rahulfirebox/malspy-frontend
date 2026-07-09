@@ -24,7 +24,7 @@ export function BlacklistProviders({ blacklists }: BlacklistProvidersProps) {
         {providers.map(([key, isListed]) => (
           <div
             key={key}
-            className={`w-[120px] h-10 flex items-center justify-center rounded px-2 border text-xs font-medium ${
+            className={`min-w-[6.5rem] flex-1 sm:flex-none sm:w-[7.5rem] h-10 flex items-center justify-center rounded px-2 border text-xs font-medium ${
               isListed
                 ? 'bg-danger-bg border-danger text-rating-d-text'
                 : 'bg-success-bg border-success text-rating-a-text'

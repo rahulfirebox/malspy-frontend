@@ -15,12 +15,14 @@ import type {
 
 interface ListScansParams {
   q?: string;
+  domain?: string;
   status?: string;
   rating?: string;
+  malware?: string;
+  ordering?: string;
   page?: number;
   cursor?: string;
   page_size?: number;
-  ordering?: string;
 }
 
 function filenameFromDisposition(disposition: string | undefined, fallback: string): string {

@@ -39,3 +39,11 @@ export const ResetPasswordSchema = z
     path: ['confirm_password'],
   });
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
+
+export const ContactRequestSchema = z.object({
+  name: z.string().trim().min(1, 'Name required').max(200),
+  phone: z.string().trim().max(20).optional(),
+  email: z.string().trim().toLowerCase().email('Valid email required'),
+  message: z.string().trim().min(1, 'Message required').max(5000),
+});
+export type ContactRequestInput = z.infer<typeof ContactRequestSchema>;

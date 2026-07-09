@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Modal } from '@/components/ui/Modal';
@@ -12,7 +12,8 @@ import { billingService } from '@/services/billingService';
 import { useAuthStore } from '@/stores/authStore';
 import { AuthScanSchema } from '@/lib/schemas/scan';
 import { ERROR_CODES } from '@/lib/constants/errorCodes';
-import { extractDomain, parseApiError } from '@/lib/apiUtils';
+import { extractDomain, normalizeDomainUrlInput, parseApiError, type DomainProtocol } from '@/lib/apiUtils';
+import { PROTOCOL_SELECT_OPTIONS } from '@/lib/constants/scanFilters';
 import toast from 'react-hot-toast';
 
 interface NewScanModalProps {
@@ -46,6 +47,7 @@ async function findExistingScanId(url: string): Promise<string | null> {
 export function NewScanModal({ open, onClose, onScanStarted }: NewScanModalProps) {
   const userId = useAuthStore(s => s.user?.id);
   const [url, setUrl] = useState('');
+  const [urlProtocol, setUrlProtocol] = useState<DomainProtocol>('https');
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [urlError, setUrlError] = useState<string | undefined>();
   const [conflictMessage, setConflictMessage] = useState<string | undefined>();
@@ -75,6 +77,7 @@ export function NewScanModal({ open, onClose, onScanStarted }: NewScanModalProps
   useEffect(() => {
     if (!open) {
       setUrl('');
+      setUrlProtocol('https');
       setNotifyEmail(true);
       setUrlError(undefined);
       resetConflictState();
@@ -103,7 +106,12 @@ export function NewScanModal({ open, onClose, onScanStarted }: NewScanModalProps
     if (submitCooldownRef.current) return;
     setUrlError(undefined);
 
-    const result = AuthScanSchema.safeParse({ url, notify_email: notifyEmail, schedule: null });
+    const normalizedUrl = normalizeDomainUrlInput(url, urlProtocol);
+    const result = AuthScanSchema.safeParse({
+      url: normalizedUrl,
+      notify_email: notifyEmail,
+      schedule: null,
+    });
     if (!result.success) {
       const err = result.error.errors.find(e => e.path[0] === 'url');
       if (err) setUrlError(err.message);
@@ -196,21 +204,53 @@ export function NewScanModal({ open, onClose, onScanStarted }: NewScanModalProps
             </p>
           )}
 
-          <Input
-            label="Website URL"
-            type="url"
-            value={url}
-            onChange={e => {
-              setUrl(e.target.value);
-              setUrlError(undefined);
-              resetConflictState();
-            }}
-            error={urlError}
-            placeholder="https://www.example.com"
-            mono
-            autoFocus
-            required
-          />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="new-scan-url" className="text-sm font-medium text-text-primary">
+              Website URL
+            </label>
+            <div className="flex gap-2">
+              <Select
+                id="new-scan-protocol"
+                value={urlProtocol}
+                onChange={value => {
+                  setUrlProtocol(value as DomainProtocol);
+                  setUrlError(undefined);
+                  resetConflictState();
+                }}
+                options={PROTOCOL_SELECT_OPTIONS}
+                className="w-28 shrink-0"
+                triggerClassName="font-mono"
+                aria-label="Protocol"
+              />
+              <input
+                id="new-scan-url"
+                type="text"
+                value={url}
+                onChange={e => {
+                  setUrl(e.target.value);
+                  setUrlError(undefined);
+                  resetConflictState();
+                }}
+                placeholder="example.com"
+                autoFocus
+                required
+                className={`min-w-0 flex-1 border rounded-lg px-3 py-2 bg-bg-elevated text-text-primary placeholder-text-secondary font-mono focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-page shadow-sm transition ${
+                  urlError ? 'border-danger' : 'border-border-dark'
+                }`}
+                aria-label="Website URL"
+                aria-describedby={urlError ? 'new-scan-url-error' : 'new-scan-url-help'}
+              />
+            </div>
+            {urlError ? (
+              <p id="new-scan-url-error" className="text-sm text-danger">
+                {urlError}
+              </p>
+            ) : (
+              <p id="new-scan-url-help" className="text-sm text-text-secondary">
+                Enter a domain or paste a full URL with http:// or https://
+              </p>
+            )}
+          </div>
 {/* 
           <div className="flex items-center gap-3">
             <input

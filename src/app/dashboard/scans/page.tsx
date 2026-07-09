@@ -7,7 +7,9 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Shield, Trash2, FileDown, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Table, TableHead, TableBody, Th, Td } from '@/components/ui/Table';
 import { RatingBadgeSmall } from '@/components/scan/RatingBadge';
 import { ScanStatusChip, MalwareStatusChip } from '@/components/scan/StatusChip';
@@ -19,9 +21,17 @@ import { NewScanModal } from '@/components/scan/NewScanModal';
 import { scanService } from '@/services/scanService';
 import { useAuthStore } from '@/stores/authStore';
 import { useDebouncedUrlSearch } from '@/hooks/useDebouncedUrlSearch';
+import { useScanFilters } from '@/hooks/useScanFilters';
 import { useUrlPagination } from '@/hooks/useUrlPagination';
+import { tableRowSerial } from '@/lib/pagination';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatDateShort } from '@/lib/apiUtils';
+import {
+  SCAN_MALWARE_FILTER_OPTIONS,
+  SCAN_ORDERING_OPTIONS,
+  SCAN_RATING_FILTER_OPTIONS,
+  SCAN_STATUS_FILTER_OPTIONS,
+} from '@/lib/constants/scanFilters';
 import toast from 'react-hot-toast';
 import type { ScanListItem } from '@/types';
 
@@ -71,12 +81,43 @@ export default function ScansPage() {
   }
 
   const { search, setSearch, debouncedSearch } = useDebouncedUrlSearch();
+  const {
+    status,
+    rating,
+    malware,
+    ordering,
+    setStatus,
+    setRating,
+    setMalware,
+    setOrdering,
+    clearFilters,
+    hasSelectFilters,
+  } = useScanFilters();
+
+  const hasActiveFilters = Boolean(debouncedSearch || hasSelectFilters);
 
   const scansQuery = useQuery({
-    queryKey: ['scans', userId, { q: debouncedSearch, page, cursor, pageSize }],
+    queryKey: [
+      'scans',
+      userId,
+      {
+        q: debouncedSearch,
+        status,
+        rating,
+        malware,
+        ordering,
+        page,
+        cursor,
+        pageSize,
+      },
+    ],
     queryFn: () =>
       scanService.listScans({
         q: debouncedSearch || undefined,
+        status: status || undefined,
+        rating: rating || undefined,
+        malware: malware || undefined,
+        ordering: ordering || undefined,
         ...apiParams,
       }),
     placeholderData: keepPreviousData,
@@ -117,21 +158,63 @@ export default function ScansPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-text-primary">Scans</h1>
-        <Button size="md" onClick={() => setShowNewScanModal(true)}>
-          + New Scan
-        </Button>
-      </div>
+      <PageHeader
+        title="Scans"
+        action={
+          <Button size="md" className="w-full sm:w-auto" onClick={() => setShowNewScanModal(true)}>
+            + New Scan
+          </Button>
+        }
+      />
 
-      <div className="max-w-sm">
-        <Input
-          type="search"
-          placeholder="Search by domain…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          aria-label="Search scans"
-        />
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="max-w-sm flex-1">
+            <Input
+              type="search"
+              placeholder="Search domain or URL…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              aria-label="Search scans"
+            />
+          </div>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="md" className="shrink-0" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Select
+            id="scan-status-filter"
+            label="Status"
+            value={status}
+            onChange={setStatus}
+            options={SCAN_STATUS_FILTER_OPTIONS}
+          />
+          <Select
+            id="scan-rating-filter"
+            label="Rating"
+            value={rating}
+            onChange={setRating}
+            options={SCAN_RATING_FILTER_OPTIONS}
+          />
+          <Select
+            id="scan-malware-filter"
+            label="Malware"
+            value={malware}
+            onChange={setMalware}
+            options={SCAN_MALWARE_FILTER_OPTIONS}
+          />
+          <Select
+            id="scan-ordering-filter"
+            label="Sort by"
+            value={ordering}
+            onChange={setOrdering}
+            options={SCAN_ORDERING_OPTIONS}
+          />
+        </div>
       </div>
 
       {scansQuery.isFetching && !scansQuery.isLoading && (
@@ -149,16 +232,20 @@ export default function ScansPage() {
           icon={<Shield className="h-12 w-12" />}
           title="No scans found"
           description={
-            debouncedSearch
-              ? `No scans match "${debouncedSearch}"`
+            hasActiveFilters
+              ? 'No scans match the current filters.'
               : 'Run your first website security scan.'
           }
           cta={
-            !debouncedSearch ? (
+            !hasActiveFilters ? (
               <Button size="sm" onClick={() => setShowNewScanModal(true)}>
                 Start Scan
               </Button>
-            ) : undefined
+            ) : (
+              <Button size="sm" variant="ghost" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            )
           }
         />
       ) : (
@@ -166,6 +253,7 @@ export default function ScansPage() {
           <Table>
             <TableHead>
               <tr>
+                <Th scope="col" className="w-12">#</Th>
                 <Th scope="col">Rating</Th>
                 <Th scope="col">Domain</Th>
                 <Th scope="col">Status</Th>
@@ -175,12 +263,17 @@ export default function ScansPage() {
               </tr>
             </TableHead>
             <TableBody>
-              {scans.map(scan => (
+              {scans.map((scan, index) => (
                 <tr
                   key={scan.id}
                   className="hover:bg-bg-page transition-colors cursor-pointer"
                   onClick={() => openScanDetail(scan.id)}
                 >
+                  <Td>
+                    <span className="text-xs text-text-secondary">
+                      {tableRowSerial(index, page, pageSize)}
+                    </span>
+                  </Td>
                   <Td>
                     <RatingBadgeSmall rating={scan.rating} />
                   </Td>

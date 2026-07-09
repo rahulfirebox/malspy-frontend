@@ -317,6 +317,8 @@ export interface Domain {
   domain: string;
   last_status: DomainStatus;
   last_scan_id: string | null;
+  last_scan_date: string | null;
+  scan_count: number;
   last_rating: OverallRating | null;
   is_active: boolean;
   frequency: ScanFrequency;

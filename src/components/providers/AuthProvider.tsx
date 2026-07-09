@@ -6,6 +6,7 @@ import axios from 'axios';
 import { getAuthSessionEpoch, isSessionStale, useAuthStore } from '@/stores/authStore';
 import { authService } from '@/services/authService';
 import { useAuthHydration } from '@/hooks/useAuthHydration';
+import { expireSession } from '@/lib/authSession';
 
 const PUBLIC_PATHS = [
   '/',
@@ -51,7 +52,7 @@ async function bootstrapSession(): Promise<void> {
 
     const is401 = axios.isAxiosError(err) && err.response?.status === 401;
     if (is401) {
-      clearAuth();
+      expireSession();
       return;
     }
 

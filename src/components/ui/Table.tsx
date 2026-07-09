@@ -7,8 +7,8 @@ interface TableProps {
 
 export function Table({ children, className = '' }: TableProps) {
   return (
-    <div className="overflow-x-auto">
-      <table className={`w-full text-sm text-left ${className}`}>{children}</table>
+    <div className="overflow-x-auto -mx-px">
+      <table className={`w-full min-w-[640px] text-sm text-left ${className}`}>{children}</table>
     </div>
   );
 }
@@ -33,7 +33,7 @@ export function Th({
   return (
     <th
       scope={scope}
-      className={`px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider ${className}`}
+      className={`px-2 py-2 sm:px-4 sm:py-3 text-xs font-medium text-text-secondary uppercase tracking-wider ${className}`}
     >
       {children}
     </th>
@@ -47,5 +47,5 @@ export function Td({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <td className={`px-4 py-3 text-text-primary ${className}`}>{children}</td>;
+  return <td className={`px-2 py-2 sm:px-4 sm:py-3 text-text-primary ${className}`}>{children}</td>;
 }

@@ -6,10 +6,11 @@ import type { Alert, PaginatedResponse } from '@/types';
 
 export const alertService = {
   async listAlerts(params?: {
-    q?: string;
     severity?: string;
     type?: string;
-    is_resolved?: boolean;
+    status?: string;
+    date?: string;
+    domain?: string;
     page?: number;
     cursor?: string;
     page_size?: number;
@@ -20,7 +21,7 @@ export const alertService = {
 
   async getRecentAlerts(): Promise<PaginatedResponse<Alert>> {
     const res = await apiClient.get(API.alerts.list, {
-      params: { is_resolved: false, page_size: 5 },
+      params: { status: 'open', page_size: 5 },
     });
     return parsePaginatedResponse<Alert>(res);
   },

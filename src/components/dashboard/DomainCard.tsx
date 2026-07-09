@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Domain } from '@/types';
 import { getFrequencyLabel } from '@/lib/constants/domainFrequency';
+import { formatDateShort } from '@/lib/apiUtils';
 import { Globe } from 'lucide-react';
 
 const statusConfig = {
@@ -35,7 +36,11 @@ export function DomainCard({ domain }: DomainCardProps) {
         {domain.domain}
       </p>
       <p className="text-xs text-text-secondary mt-1">Scan: {getFrequencyLabel(domain.frequency)}</p>
-      {domain.last_scan_id && <p className="text-xs text-text-secondary mt-0.5">Last scan recorded</p>}
+      {domain.last_scan_date ? (
+        <p className="text-xs text-text-secondary mt-0.5">
+          Last scan: {formatDateShort(domain.last_scan_date)}
+        </p>
+      ) : null}
     </div>
   );
 }

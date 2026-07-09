@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAgents, useCreateAgent, useRevokeAgent } from '@/hooks/useAgents';
 import { Button } from '@/components/ui/Button';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Input } from '@/components/ui/Input';
 import { Table, TableHead, TableBody, Th, Td } from '@/components/ui/Table';
 import { SkeletonTable } from '@/components/ui/Skeleton';
@@ -15,6 +16,7 @@ import { PlanGate } from '@/components/ui/PlanGate';
 import { Server, Trash2, Plus, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatDateShort, parseApiError } from '@/lib/apiUtils';
+import { tableRowSerial } from '@/lib/pagination';
 import { AGENT_TYPE_OPTIONS, VALID_AGENT_TYPES } from '@/lib/constants/agentTypes';
 import { ERROR_CODES } from '@/lib/constants/errorCodes';
 import type { AgentTypeValue } from '@/lib/constants/agentTypes';
@@ -89,13 +91,15 @@ export default function AgentsPage() {
   return (
     <PlanGate plan="pro">
       <div className="space-y-5">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-[#0E0E14]">Server Agents</h1>
-          <Button size="md" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
-            Register Agent
-          </Button>
-        </div>
+        <PageHeader
+          title="Server Agents"
+          action={
+            <Button size="md" className="w-full sm:w-auto" onClick={() => setAddOpen(true)}>
+              <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+              Register Agent
+            </Button>
+          }
+        />
 
         {isPending ? (
           <SkeletonTable rows={4} />
@@ -117,6 +121,7 @@ export default function AgentsPage() {
             <Table>
               <TableHead>
                 <tr>
+                  <Th scope="col" className="w-12">#</Th>
                   <Th scope="col">Name</Th>
                   <Th scope="col">Type</Th>
                   <Th scope="col">Status</Th>
@@ -126,8 +131,11 @@ export default function AgentsPage() {
                 </tr>
               </TableHead>
               <TableBody>
-                {agents.map(agent => (
+                {agents.map((agent, index) => (
                   <tr key={agent.id} className="hover:bg-gray-50 transition-colors">
+                    <Td>
+                      <span className="text-xs text-[#5B5B6B]">{tableRowSerial(index)}</span>
+                    </Td>
                     <Td>
                       <span className="font-medium text-[#0E0E14]">{agent.name}</span>
                     </Td>

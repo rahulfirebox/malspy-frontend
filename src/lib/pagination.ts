@@ -115,6 +115,15 @@ export function applyPaginationLinkToSearchParams(
   return params;
 }
 
+/** 1-based serial number for a table row (accounts for paginated lists). */
+export function tableRowSerial(
+  index: number,
+  page = 1,
+  pageSize: number = DEFAULT_PAGE_SIZE
+): number {
+  return (page - 1) * pageSize + index + 1;
+}
+
 /** Derive pagination metadata when total count is known. */
 export function getPaginationMeta(
   totalCount: number,
