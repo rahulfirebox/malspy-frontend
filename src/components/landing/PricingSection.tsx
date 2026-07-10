@@ -130,16 +130,16 @@ export function PricingSection() {
   const plansQuery = useQuery({
     queryKey: ['plans', 'public'],
     queryFn: () => billingService.getPlans(),
-    staleTime: 60_000,
-    retry: 1,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+    retry: false,
+    placeholderData: LANDING_FALLBACK_PLANS,
   });
 
   const displayPlans = useMemo(() => {
     const apiPlans = (plansQuery.data ?? []).filter(plan => plan.is_active !== false);
     return apiPlans.length > 0 ? apiPlans : LANDING_FALLBACK_PLANS;
   }, [plansQuery.data]);
-
-  const showSkeleton = plansQuery.isPending && (plansQuery.data ?? []).length === 0;
 
   return (
     <section id="pricing" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 border-t border-border/50">
@@ -151,22 +151,11 @@ export function PricingSection() {
           Start free, upgrade when you need more.
         </p>
 
-        {showSkeleton ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-md sm:max-w-none mx-auto">
-            {[0, 1, 2].map(i => (
-              <div
-                key={`pricing-skel-${i}`}
-                className="glass-card rounded-xl p-6 h-80 motion-safe:animate-pulse bg-bg-elevated/50"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-md sm:max-w-none mx-auto">
-            {displayPlans.map(plan => (
-              <PlanCard key={plan.id} plan={plan} />
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-md sm:max-w-none mx-auto">
+          {displayPlans.map(plan => (
+            <PlanCard key={plan.id} plan={plan} />
+          ))}
+        </div>
       </div>
     </section>
   );
